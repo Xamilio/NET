@@ -1,274 +1,227 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace UniversitySystem
+namespace OOPTasks
 {
-    public class Address
-    {
-        public string Street { get; set; }
-        public string City { get; set; }
-
-        public Address(string street, string city)
-        {
-            if (string.IsNullOrEmpty(street))
-            {
-                throw new ArgumentNullException(nameof(street));
-            }
-            if (string.IsNullOrEmpty(city))
-            {
-                throw new ArgumentNullException(nameof(city));
-            }
-
-            Street = street;
-            City = city;
-        }
-
-        public void DisplayInfo()
-        {
-            Console.WriteLine("Адреса: м. " + City + ", вул. " + Street);
-        }
-    }
-
-    public class Student
-    {
-        public int Id { get; set; }
-        public string Name { get; set; }
-
-        public Student(int id, string name)
-        {
-            if (id <= 0)
-            {
-                throw new ArgumentException();
-            }
-            if (string.IsNullOrEmpty(name))
-            {
-                throw new ArgumentNullException(nameof(name));
-            }
-
-            Id = id;
-            Name = name;
-        }
-
-        public void DisplayInfo()
-        {
-            Console.WriteLine("Студент [ID: " + Id + "] - " + Name);
-        }
-    }
-
-    public class Teacher
-    {
-        public int Id { get; set; }
-        public string Name { get; set; }
-
-        public Teacher(int id, string name)
-        {
-            if (id <= 0)
-            {
-                throw new ArgumentException();
-            }
-            if (string.IsNullOrEmpty(name))
-            {
-                throw new ArgumentNullException(nameof(name));
-            }
-
-            Id = id;
-            Name = name;
-        }
-
-        public void DisplayInfo()
-        {
-            Console.WriteLine("Викладач [ID: " + Id + "] - " + Name);
-        }
-    }
-
-    public class CourseModule
+    public class Journal
     {
         public string Title { get; set; }
+        private int employeesCount;
 
-        public CourseModule(string title)
+        public int EmployeesCount
         {
-            if (string.IsNullOrEmpty(title))
+            get { return employeesCount; }
+            set
             {
-                throw new ArgumentNullException(nameof(title));
+                if (value < 0)
+                {
+                    throw new ArgumentException("Кількість працівників не може бути від'ємною.");
+                }
+                employeesCount = value;
             }
+        }
 
+        public Journal(string title, int employeesCount)
+        {
             Title = title;
+            EmployeesCount = employeesCount;
+        }
+
+        public static Journal operator +(Journal journal, int amount)
+        {
+            return new Journal(journal.Title, journal.EmployeesCount + amount);
+        }
+
+        public static Journal operator -(Journal journal, int amount)
+        {
+            return new Journal(journal.Title, journal.EmployeesCount - amount);
+        }
+
+        public static bool operator ==(Journal j1, Journal j2)
+        {
+            if (ReferenceEquals(j1, j2)) return true;
+            if (ReferenceEquals(j1, null) || ReferenceEquals(j2, null)) return false;
+            return j1.EmployeesCount == j2.EmployeesCount;
+        }
+
+        public static bool operator !=(Journal j1, Journal j2)
+        {
+            return !(j1 == j2);
+        }
+
+        public static bool operator <(Journal j1, Journal j2)
+        {
+            return j1.EmployeesCount < j2.EmployeesCount;
+        }
+
+        public static bool operator >(Journal j1, Journal j2)
+        {
+            return j1.EmployeesCount > j2.EmployeesCount;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is Journal journal)
+            {
+                return this.EmployeesCount == journal.EmployeesCount;
+            }
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return EmployeesCount.GetHashCode();
         }
 
         public void DisplayInfo()
         {
-            Console.WriteLine("  - Модуль: " + Title);
+            Console.WriteLine("Журнал: " + Title + " | Працівників: " + EmployeesCount);
         }
     }
 
-    public class Course
+    public class Shop
     {
-        public static int CreatedCoursesCount = 0;
+        public string Name { get; set; }
+        private double area;
 
-        public string Title { get; set; }
-        private List<CourseModule> modules;
-        private List<Student> students;
-
-        public Course(string title, List<string> moduleTitles)
+        public double Area
         {
-            if (string.IsNullOrEmpty(title))
+            get { return area; }
+            set
             {
-                throw new ArgumentNullException(nameof(title));
-            }
-
-            Title = title;
-            modules = new List<CourseModule>();
-            students = new List<Student>();
-
-            if (moduleTitles != null)
-            {
-                foreach (string mTitle in moduleTitles)
+                if (value < 0)
                 {
-                    modules.Add(new CourseModule(mTitle));
+                    throw new ArgumentException("Площа магазину не може бути від'ємною.");
                 }
+                area = value;
             }
-
-            CreatedCoursesCount++;
         }
 
-        public void AddStudent(Student student)
+        public Shop(string name, double area)
         {
-            if (student == null)
-            {
-                throw new ArgumentNullException(nameof(student));
-            }
+            Name = name;
+            Area = area;
+        }
 
-            foreach (Student s in students)
+        public static Shop operator +(Shop shop, double amount)
+        {
+            return new Shop(shop.Name, shop.Area + amount);
+        }
+
+        public static Shop operator -(Shop shop, double amount)
+        {
+            return new Shop(shop.Name, shop.Area - amount);
+        }
+
+        public static bool operator ==(Shop s1, Shop s2)
+        {
+            if (ReferenceEquals(s1, s2)) return true;
+            if (ReferenceEquals(s1, null) || ReferenceEquals(s2, null)) return false;
+            return s1.Area == s2.Area;
+        }
+
+        public static bool operator !=(Shop s1, Shop s2)
+        {
+            return !(s1 == s2);
+        }
+
+        public static bool operator <(Shop s1, Shop s2)
+        {
+            return s1.Area < s2.Area;
+        }
+
+        public static bool operator >(Shop s1, Shop s2)
+        {
+            return s1.Area > s2.Area;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is Shop shop)
             {
-                if (s.Id == student.Id)
+                return this.Area == shop.Area;
+            }
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return Area.GetHashCode();
+        }
+
+        public void DisplayInfo()
+        {
+            Console.WriteLine("Магазин: " + Name + " | Площа: " + Area + " кв.м.");
+        }
+    }
+
+    public class BookList
+    {
+        private List<string> books;
+
+        public int Count
+        {
+            get { return books.Count; }
+        }
+
+        public BookList()
+        {
+            books = new List<string>();
+        }
+
+        public string this[int index]
+        {
+            get
+            {
+                if (index < 0 || index >= books.Count)
                 {
-                    throw new InvalidOperationException("Студент вже зарахований.");
+                    throw new IndexOutOfRangeException("Некоректний індекс книги.");
                 }
+                return books[index];
             }
-
-            students.Add(student);
-            Console.WriteLine("Студента " + student.Name + " додано на курс " + Title + ".");
-        }
-
-        public void RemoveStudent(Student student)
-        {
-            if (student == null)
+            set
             {
-                throw new ArgumentNullException(nameof(student));
-            }
-
-            if (students.Remove(student))
-            {
-                Console.WriteLine("Студента " + student.Name + " видалено з курсу " + Title + ".");
-            }
-            else
-            {
-                Console.WriteLine("Студента " + student.Name + " не знайдено.");
-            }
-        }
-
-        public Student FindStudentByName(string name)
-        {
-            foreach (Student s in students)
-            {
-                if (s.Name.Equals(name, StringComparison.OrdinalIgnoreCase))
+                if (index < 0 || index >= books.Count)
                 {
-                    return s;
+                    throw new IndexOutOfRangeException("Некоректний індекс книги.");
                 }
+                books[index] = value;
             }
-            return null;
         }
 
-        public Student FindStudentById(int id)
+        public static BookList operator +(BookList list, string book)
         {
-            foreach (Student s in students)
+            if (!string.IsNullOrEmpty(book) && !list.Contains(book))
             {
-                if (s.Id == id)
-                {
-                    return s;
-                }
+                list.books.Add(book);
             }
-            return null;
+            return list;
         }
 
-        public void DisplayStudents()
+        public static BookList operator -(BookList list, string book)
         {
-            Console.WriteLine("Студенти курсу \"" + Title + "\":");
-            if (students.Count == 0)
+            list.books.Remove(book);
+            return list;
+        }
+
+        public bool Contains(string book)
+        {
+            return books.Contains(book);
+        }
+
+        public void DisplayBooks()
+        {
+            Console.WriteLine("=== Список книг до прочитання ===");
+            if (books.Count == 0)
             {
-                Console.WriteLine("  На курсі немає студентів.");
+                Console.WriteLine("Список порожній.");
                 return;
             }
 
-            foreach (Student s in students)
+            for (int i = 0; i < books.Count; i++)
             {
-                Console.Write("  ");
-                s.DisplayInfo();
+                Console.WriteLine((i + 1) + ". " + books[i]);
             }
-        }
-
-        public void DisplayInfo()
-        {
-            Console.WriteLine("Курс: " + Title);
-            Console.WriteLine("Навчальні модулі курсу:");
-            foreach (CourseModule m in modules)
-            {
-                m.DisplayInfo();
-            }
-            DisplayStudents();
-        }
-    }
-
-    public class University
-    {
-        public string Name { get; set; }
-        public Address Address { get; private set; }
-        private List<Teacher> teachers;
-
-        public University(string name, string street, string city)
-        {
-            if (string.IsNullOrEmpty(name))
-            {
-                throw new ArgumentNullException(nameof(name));
-            }
-
-            Name = name;
-            Address = new Address(street, city);
-            teachers = new List<Teacher>();
-        }
-
-        public void AddTeacher(Teacher teacher)
-        {
-            if (teacher == null)
-            {
-                throw new ArgumentNullException(nameof(teacher));
-            }
-
-            teachers.Add(teacher);
-            Console.WriteLine("Викладача " + teacher.Name + " додано до університету " + Name + ".");
-        }
-
-        public void DisplayTeachers()
-        {
-            Console.WriteLine("Викладачі університету " + Name + ":");
-            if (teachers.Count == 0)
-            {
-                Console.WriteLine("  Викладачів немає.");
-                return;
-            }
-
-            foreach (Teacher t in teachers)
-            {
-                Console.Write("  ");
-                t.DisplayInfo();
-            }
-        }
-
-        public void DisplayInfo()
-        {
-            Console.WriteLine("=== УНІВЕРСИТЕТ: " + Name + " ===");
-            Address.DisplayInfo();
-            DisplayTeachers();
         }
     }
 
@@ -280,87 +233,45 @@ namespace UniversitySystem
 
             try
             {
-                Student student1 = new Student(1, "Олексій Іваненко");
-                Student student2 = new Student(2, "Марія Петренко");
-                Student student3 = new Student(3, "Іван Сидоренко");
+                Console.WriteLine("--- ЗАВДАННЯ 1: Журнал ---");
+                Journal j1 = new Journal("IT World", 10);
+                Journal j2 = new Journal("Science", 15);
 
-                Teacher teacher1 = new Teacher(101, "проф. Шевченко Т. Г.");
-                Teacher teacher2 = new Teacher(102, "доц. Бондаренко О. В.");
+                j1 = j1 + 5;
+                j1.DisplayInfo();
 
-                University uni = new University("КНУ ім. Тараса Шевченка", "Володимирська 60", "Київ");
-
-                uni.AddTeacher(teacher1);
-                uni.AddTeacher(teacher2);
-
-                Console.WriteLine();
-                uni.DisplayInfo();
+                Console.WriteLine("j1 == j2: " + (j1 == j2));
+                Console.WriteLine("j1 > j2: " + (j1 > j2));
+                Console.WriteLine("Equals: " + j1.Equals(j2));
                 Console.WriteLine();
 
-                List<string> csharpModules = new List<string>() 
-                { 
-                    "Основи ООП", 
-                    "Винятки та колекції", 
-                    "Агрегація і композиція" 
-                };
-                
-                Course course1 = new Course("Програмування C#", csharpModules);
+                Console.WriteLine("--- ЗАВДАННЯ 2: Магазин ---");
+                Shop s1 = new Shop("Продукти", 150.5);
+                Shop s2 = new Shop("Одяг", 200.0);
 
-                List<string> mathModules = new List<string>() 
-                { 
-                    "Матриці", 
-                    "Векторний аналіз" 
-                };
+                s1 = s1 + 49.5;
+                s1.DisplayInfo();
 
-                Course course2 = new Course("Вища математика", mathModules);
-
-                Console.WriteLine("Створено курсів: " + Course.CreatedCoursesCount);
+                Console.WriteLine("s1 == s2: " + (s1 == s2));
+                Console.WriteLine("s1 < s2: " + (s1 < s2));
                 Console.WriteLine();
 
-                course1.AddStudent(student1);
-                course1.AddStudent(student2);
+                Console.WriteLine("--- ЗАВДАННЯ 3: Список книг ---");
+                BookList readingList = new BookList();
 
-                course2.AddStudent(student2);
-                course2.AddStudent(student3);
+                readingList = readingList + "Кобзар";
+                readingList = readingList + "1984";
+                readingList = readingList + "Майстер і Маргарита";
 
-                Console.WriteLine();
-                course1.DisplayInfo();
-                Console.WriteLine();
+                readingList.DisplayBooks();
 
-                Student foundByName = course1.FindStudentByName("Марія Петренко");
-                if (foundByName != null)
-                {
-                    Console.WriteLine("Знайдено за ім'ям: " + foundByName.Name);
-                }
+                Console.WriteLine("\nЧи є книга '1984' у списку? " + readingList.Contains("1984"));
 
-                Student foundById = course1.FindStudentById(1);
-                if (foundById != null)
-                {
-                    Console.WriteLine("Знайдено за ID: " + foundById.Name);
-                }
+                Console.WriteLine("\nКнига за індексом 0: " + readingList[0]);
 
-                Console.WriteLine();
-
-                try
-                {
-                    course1.AddStudent(student1);
-                }
-                catch (InvalidOperationException ex)
-                {
-                    Console.WriteLine("Помилка повторного додавання: " + ex.Message);
-                }
-
-                Console.WriteLine();
-
-                course1 = null;
-
-                Console.WriteLine("Студенти після видалення курсу:");
-                student1.DisplayInfo();
-                student2.DisplayInfo();
-
-                Console.WriteLine();
-                teacher1.DisplayInfo();
-
-                uni = null;
+                readingList = readingList - "1984";
+                Console.WriteLine("\nПісля видалення '1984':");
+                readingList.DisplayBooks();
             }
             catch (Exception ex)
             {

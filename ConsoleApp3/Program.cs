@@ -1,200 +1,274 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace PassportApp
+namespace UniversitySystem
 {
-    public class ForeignPassport
+    public class Address
     {
-        public const int MaxValidityPeriodYears = 10;
-        public const int PassportNumberLength = 9;
+        public string Street { get; set; }
+        public string City { get; set; }
 
-        private static List<string> allowedCountryCodes;
-        public static int CreatedObjectsCount;
-
-        static ForeignPassport()
+        public Address(string street, string city)
         {
-            allowedCountryCodes = new List<string>()
+            if (string.IsNullOrEmpty(street))
             {
-                "UKR", "USA", "DEU", "FRA", "GBR", "POL", "CAN"
-            };
-
-            if (allowedCountryCodes.Count == 0)
+                throw new ArgumentNullException(nameof(street));
+            }
+            if (string.IsNullOrEmpty(city))
             {
-                throw new Exception("Список кодов стран пуст.");
+                throw new ArgumentNullException(nameof(city));
             }
 
-            CreatedObjectsCount = 0;
+            Street = street;
+            City = city;
         }
 
-        public readonly string Id;
-
-        private string passportNumber;
-        private string fullName;
-        private DateTime birthDate;
-        private DateTime issueDate;
-        private DateTime expiryDate;
-        private string issuingAuthority;
-        private string countryCode;
-
-        public string PassportNumber
+        public void DisplayInfo()
         {
-            get { return passportNumber; }
-            set
+            Console.WriteLine("Адреса: м. " + City + ", вул. " + Street);
+        }
+    }
+
+    public class Student
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+
+        public Student(int id, string name)
+        {
+            if (id <= 0)
             {
-                if (string.IsNullOrEmpty(value))
-                {
-                    throw new ArgumentNullException(nameof(PassportNumber), "Номер паспорта не может быть пустым.");
-                }
+                throw new ArgumentException();
+            }
+            if (string.IsNullOrEmpty(name))
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
 
-                if (value.Length != PassportNumberLength)
-                {
-                    throw new ArgumentException("Номер паспорта должен содержать ровно 9 символов.", nameof(PassportNumber));
-                }
+            Id = id;
+            Name = name;
+        }
 
-                passportNumber = value;
+        public void DisplayInfo()
+        {
+            Console.WriteLine("Студент [ID: " + Id + "] - " + Name);
+        }
+    }
+
+    public class Teacher
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+
+        public Teacher(int id, string name)
+        {
+            if (id <= 0)
+            {
+                throw new ArgumentException();
+            }
+            if (string.IsNullOrEmpty(name))
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
+
+            Id = id;
+            Name = name;
+        }
+
+        public void DisplayInfo()
+        {
+            Console.WriteLine("Викладач [ID: " + Id + "] - " + Name);
+        }
+    }
+
+    public class CourseModule
+    {
+        public string Title { get; set; }
+
+        public CourseModule(string title)
+        {
+            if (string.IsNullOrEmpty(title))
+            {
+                throw new ArgumentNullException(nameof(title));
+            }
+
+            Title = title;
+        }
+
+        public void DisplayInfo()
+        {
+            Console.WriteLine("  - Модуль: " + Title);
+        }
+    }
+
+    public class Course
+    {
+        public static int CreatedCoursesCount = 0;
+
+        public string Title { get; set; }
+        private List<CourseModule> modules;
+        private List<Student> students;
+
+        public Course(string title, List<string> moduleTitles)
+        {
+            if (string.IsNullOrEmpty(title))
+            {
+                throw new ArgumentNullException(nameof(title));
+            }
+
+            Title = title;
+            modules = new List<CourseModule>();
+            students = new List<Student>();
+
+            if (moduleTitles != null)
+            {
+                foreach (string mTitle in moduleTitles)
+                {
+                    modules.Add(new CourseModule(mTitle));
+                }
+            }
+
+            CreatedCoursesCount++;
+        }
+
+        public void AddStudent(Student student)
+        {
+            if (student == null)
+            {
+                throw new ArgumentNullException(nameof(student));
+            }
+
+            foreach (Student s in students)
+            {
+                if (s.Id == student.Id)
+                {
+                    throw new InvalidOperationException("Студент вже зарахований.");
+                }
+            }
+
+            students.Add(student);
+            Console.WriteLine("Студента " + student.Name + " додано на курс " + Title + ".");
+        }
+
+        public void RemoveStudent(Student student)
+        {
+            if (student == null)
+            {
+                throw new ArgumentNullException(nameof(student));
+            }
+
+            if (students.Remove(student))
+            {
+                Console.WriteLine("Студента " + student.Name + " видалено з курсу " + Title + ".");
+            }
+            else
+            {
+                Console.WriteLine("Студента " + student.Name + " не знайдено.");
             }
         }
 
-        public string FullName
+        public Student FindStudentByName(string name)
         {
-            get { return fullName; }
-            set
+            foreach (Student s in students)
             {
-                if (string.IsNullOrEmpty(value))
+                if (s.Name.Equals(name, StringComparison.OrdinalIgnoreCase))
                 {
-                    throw new ArgumentNullException(nameof(FullName), "ФИО не может быть пустым.");
+                    return s;
                 }
+            }
+            return null;
+        }
 
-                fullName = value;
+        public Student FindStudentById(int id)
+        {
+            foreach (Student s in students)
+            {
+                if (s.Id == id)
+                {
+                    return s;
+                }
+            }
+            return null;
+        }
+
+        public void DisplayStudents()
+        {
+            Console.WriteLine("Студенти курсу \"" + Title + "\":");
+            if (students.Count == 0)
+            {
+                Console.WriteLine("  На курсі немає студентів.");
+                return;
+            }
+
+            foreach (Student s in students)
+            {
+                Console.Write("  ");
+                s.DisplayInfo();
             }
         }
 
-        public DateTime BirthDate
+        public void DisplayInfo()
         {
-            get { return birthDate; }
-            set
+            Console.WriteLine("Курс: " + Title);
+            Console.WriteLine("Навчальні модулі курсу:");
+            foreach (CourseModule m in modules)
             {
-                if (value > DateTime.Now)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(BirthDate), "Дата рождения не может быть в будущем.");
-                }
+                m.DisplayInfo();
+            }
+            DisplayStudents();
+        }
+    }
 
-                birthDate = value;
+    public class University
+    {
+        public string Name { get; set; }
+        public Address Address { get; private set; }
+        private List<Teacher> teachers;
+
+        public University(string name, string street, string city)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
+
+            Name = name;
+            Address = new Address(street, city);
+            teachers = new List<Teacher>();
+        }
+
+        public void AddTeacher(Teacher teacher)
+        {
+            if (teacher == null)
+            {
+                throw new ArgumentNullException(nameof(teacher));
+            }
+
+            teachers.Add(teacher);
+            Console.WriteLine("Викладача " + teacher.Name + " додано до університету " + Name + ".");
+        }
+
+        public void DisplayTeachers()
+        {
+            Console.WriteLine("Викладачі університету " + Name + ":");
+            if (teachers.Count == 0)
+            {
+                Console.WriteLine("  Викладачів немає.");
+                return;
+            }
+
+            foreach (Teacher t in teachers)
+            {
+                Console.Write("  ");
+                t.DisplayInfo();
             }
         }
 
-        public DateTime IssueDate
+        public void DisplayInfo()
         {
-            get { return issueDate; }
-            set
-            {
-                if (value < birthDate)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(IssueDate), "Дата выдачи не может быть раньше даты рождения.");
-                }
-
-                if (value > DateTime.Now)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(IssueDate), "Дата выдачи не может быть в будущем.");
-                }
-
-                issueDate = value;
-            }
-        }
-
-        public DateTime ExpiryDate
-        {
-            get { return expiryDate; }
-            set
-            {
-                if (value <= issueDate)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(ExpiryDate), "Дата окончания не может быть раньше даты выдачи.");
-                }
-
-                if (value > issueDate.AddYears(MaxValidityPeriodYears))
-                {
-                    throw new ArgumentOutOfRangeException(nameof(ExpiryDate), "Срок действия паспорта не может превышать 10 лет.");
-                }
-
-                expiryDate = value;
-            }
-        }
-
-        public string IssuingAuthority
-        {
-            get { return issuingAuthority; }
-            set
-            {
-                if (string.IsNullOrEmpty(value))
-                {
-                    throw new ArgumentNullException(nameof(IssuingAuthority), "Орган выдачи не может быть пустым.");
-                }
-
-                issuingAuthority = value;
-            }
-        }
-
-        public string CountryCode
-        {
-            get { return countryCode; }
-            set
-            {
-                if (string.IsNullOrEmpty(value))
-                {
-                    throw new ArgumentNullException(nameof(CountryCode), "Код страны не может быть пустым.");
-                }
-
-                if (!allowedCountryCodes.Contains(value.ToUpper()))
-                {
-                    throw new ArgumentException("Недопустимый код страны.", nameof(CountryCode));
-                }
-
-                countryCode = value.ToUpper();
-            }
-        }
-
-        public ForeignPassport()
-        {
-            Id = Guid.NewGuid().ToString();
-
-            birthDate = new DateTime(2000, 1, 1);
-            issueDate = DateTime.Now.AddYears(-1);
-            expiryDate = issueDate.AddYears(10);
-
-            PassportNumber = "123456789";
-            FullName = "Иванов Иван Иванович";
-            IssuingAuthority = "орган 1234";
-            CountryCode = "UKR";
-
-            CreatedObjectsCount++;
-        }
-
-        public ForeignPassport(string passportNumber, string fullName, DateTime birthDate, DateTime issueDate, DateTime expiryDate, string issuingAuthority, string countryCode)
-        {
-            Id = Guid.NewGuid().ToString();
-
-            BirthDate = birthDate;
-            PassportNumber = passportNumber;
-            FullName = fullName;
-            IssuingAuthority = issuingAuthority;
-            CountryCode = countryCode;
-            IssueDate = issueDate;
-            ExpiryDate = expiryDate;
-
-            CreatedObjectsCount++;
-        }
-
-        public void PrintInfo()
-        {
-            Console.WriteLine("ID: " + Id);
-            Console.WriteLine("Паспорт: " + PassportNumber + " (" + CountryCode + ")");
-            Console.WriteLine("ФИО: " + FullName);
-            Console.WriteLine("Дата рождения: " + BirthDate.ToShortDateString());
-            Console.WriteLine("Дата выдачи: " + IssueDate.ToShortDateString());
-            Console.WriteLine("Действителен до: " + ExpiryDate.ToShortDateString());
-            Console.WriteLine("Выдал: " + IssuingAuthority);
-            Console.WriteLine();
+            Console.WriteLine("=== УНІВЕРСИТЕТ: " + Name + " ===");
+            Address.DisplayInfo();
+            DisplayTeachers();
         }
     }
 
@@ -202,41 +276,95 @@ namespace PassportApp
     {
         static void Main(string[] args)
         {
+            Console.OutputEncoding = System.Text.Encoding.UTF8;
+
             try
             {
-                ForeignPassport passport1 = new ForeignPassport();
-                passport1.PrintInfo();
+                Student student1 = new Student(1, "Олексій Іваненко");
+                Student student2 = new Student(2, "Марія Петренко");
+                Student student3 = new Student(3, "Іван Сидоренко");
 
-                ForeignPassport passport2 = new ForeignPassport("987654321", "Петров Петр Петрович", new DateTime(1995, 5, 15), new DateTime(2020, 1, 10), new DateTime(2030, 1, 10), "орган 5678", "UKR");
-                passport2.PrintInfo();
+                Teacher teacher1 = new Teacher(101, "проф. Шевченко Т. Г.");
+                Teacher teacher2 = new Teacher(102, "доц. Бондаренко О. В.");
 
-                Console.WriteLine("Всего создано паспортов: " + ForeignPassport.CreatedObjectsCount);
+                University uni = new University("КНУ ім. Тараса Шевченка", "Володимирська 60", "Київ");
+
+                uni.AddTeacher(teacher1);
+                uni.AddTeacher(teacher2);
+
                 Console.WriteLine();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Ошибка: " + ex.Message);
-            }
+                uni.DisplayInfo();
+                Console.WriteLine();
 
-            try
-            {
-                ForeignPassport badPassport = new ForeignPassport("123", "", new DateTime(1990, 1, 1), new DateTime(2020, 1, 1), new DateTime(2035, 1, 1), "орган", "ABC");
-            }
-            catch (ArgumentNullException ex)
-            {
-                Console.WriteLine("Ошибка с пустым значением: " + ex.Message);
-            }
-            catch (ArgumentOutOfRangeException ex)
-            {
-                Console.WriteLine("Ошибка с датой или сроком: " + ex.Message);
-            }
-            catch (ArgumentException ex)
-            {
-                Console.WriteLine("Ошибка в данных: " + ex.Message);
+                List<string> csharpModules = new List<string>() 
+                { 
+                    "Основи ООП", 
+                    "Винятки та колекції", 
+                    "Агрегація і композиція" 
+                };
+                
+                Course course1 = new Course("Програмування C#", csharpModules);
+
+                List<string> mathModules = new List<string>() 
+                { 
+                    "Матриці", 
+                    "Векторний аналіз" 
+                };
+
+                Course course2 = new Course("Вища математика", mathModules);
+
+                Console.WriteLine("Створено курсів: " + Course.CreatedCoursesCount);
+                Console.WriteLine();
+
+                course1.AddStudent(student1);
+                course1.AddStudent(student2);
+
+                course2.AddStudent(student2);
+                course2.AddStudent(student3);
+
+                Console.WriteLine();
+                course1.DisplayInfo();
+                Console.WriteLine();
+
+                Student foundByName = course1.FindStudentByName("Марія Петренко");
+                if (foundByName != null)
+                {
+                    Console.WriteLine("Знайдено за ім'ям: " + foundByName.Name);
+                }
+
+                Student foundById = course1.FindStudentById(1);
+                if (foundById != null)
+                {
+                    Console.WriteLine("Знайдено за ID: " + foundById.Name);
+                }
+
+                Console.WriteLine();
+
+                try
+                {
+                    course1.AddStudent(student1);
+                }
+                catch (InvalidOperationException ex)
+                {
+                    Console.WriteLine("Помилка повторного додавання: " + ex.Message);
+                }
+
+                Console.WriteLine();
+
+                course1 = null;
+
+                Console.WriteLine("Студенти після видалення курсу:");
+                student1.DisplayInfo();
+                student2.DisplayInfo();
+
+                Console.WriteLine();
+                teacher1.DisplayInfo();
+
+                uni = null;
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Другая ошибка: " + ex.Message);
+                Console.WriteLine("Помилка: " + ex.Message);
             }
         }
     }

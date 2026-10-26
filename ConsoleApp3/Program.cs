@@ -1,282 +1,280 @@
 ﻿using System;
-using System.Collections.Generic;
 
-namespace OOPTasks
+internal class Employee
 {
-    public class Journal
+    public string Name { get; set; }
+    public decimal Salary { get; set; }
+
+    public Employee()
     {
-        public string Title { get; set; }
-        private int employeesCount;
+        Name = "Unknown";
+        Salary = 0;
+    }
 
-        public int EmployeesCount
+    public Employee(string name, decimal salary)
+    {
+        Name = name;
+        Salary = salary < 0 ? 0 : salary;
+    }
+
+    public static Employee operator +(Employee emp, decimal value)
+    {
+        return new Employee(emp.Name, emp.Salary + value);
+    }
+
+    public static Employee operator -(Employee emp, decimal value)
+    {
+        decimal newSalary = emp.Salary - value;
+        return new Employee(emp.Name, newSalary < 0 ? 0 : newSalary);
+    }
+
+    public static Employee operator ++(Employee emp)
+    {
+        emp.Salary += 500;
+        return emp;
+    }
+
+    public static Employee operator --(Employee emp)
+    {
+        emp.Salary = emp.Salary - 500 < 0 ? 0 : emp.Salary - 500;
+        return emp;
+    }
+
+    public static bool operator <(Employee left, Employee right)
+    {
+        return left.Salary < right.Salary;
+    }
+
+    public static bool operator >(Employee left, Employee right)
+    {
+        return left.Salary > right.Salary;
+    }
+
+    public static bool operator ==(Employee left, Employee right)
+    {
+        if (ReferenceEquals(left, right)) return true;
+        if (left is null || right is null) return false;
+        return left.Salary == right.Salary;
+    }
+
+    public static bool operator !=(Employee left, Employee right)
+    {
+        return !(left == right);
+    }
+
+    public override bool Equals(object obj)
+    {
+        if (obj is Employee other)
         {
-            get { return employeesCount; }
-            set
-            {
-                if (value < 0)
-                {
-                    throw new ArgumentException("Кількість працівників не може бути від'ємною.");
-                }
-                employeesCount = value;
-            }
+            return this.Salary == other.Salary;
         }
+        return false;
+    }
 
-        public Journal(string title, int employeesCount)
+    public override int GetHashCode()
+    {
+        return Salary.GetHashCode();
+    }
+
+    public override string ToString()
+    {
+        return $"Співробітник: {Name}, Зарплата: {Salary}";
+    }
+}
+
+internal class Matrix
+{
+    private int[,] _data;
+
+    public int Rows { get; }
+    public int Cols { get; }
+
+    public Matrix(int rows, int cols)
+    {
+        Rows = rows;
+        Cols = cols;
+        _data = new int[rows, cols];
+    }
+
+    public int this[int row, int col]
+    {
+        get
         {
-            Title = title;
-            EmployeesCount = employeesCount;
+            if (row >= 0 && row < Rows && col >= 0 && col < Cols)
+                return _data[row, col];
+            throw new IndexOutOfRangeException("Некоректний індекс матриці!");
         }
-
-        public static Journal operator +(Journal journal, int amount)
+        set
         {
-            return new Journal(journal.Title, journal.EmployeesCount + amount);
-        }
-
-        public static Journal operator -(Journal journal, int amount)
-        {
-            return new Journal(journal.Title, journal.EmployeesCount - amount);
-        }
-
-        public static bool operator ==(Journal j1, Journal j2)
-        {
-            if (ReferenceEquals(j1, j2)) return true;
-            if (ReferenceEquals(j1, null) || ReferenceEquals(j2, null)) return false;
-            return j1.EmployeesCount == j2.EmployeesCount;
-        }
-
-        public static bool operator !=(Journal j1, Journal j2)
-        {
-            return !(j1 == j2);
-        }
-
-        public static bool operator <(Journal j1, Journal j2)
-        {
-            return j1.EmployeesCount < j2.EmployeesCount;
-        }
-
-        public static bool operator >(Journal j1, Journal j2)
-        {
-            return j1.EmployeesCount > j2.EmployeesCount;
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (obj is Journal journal)
-            {
-                return this.EmployeesCount == journal.EmployeesCount;
-            }
-            return false;
-        }
-
-        public override int GetHashCode()
-        {
-            return EmployeesCount.GetHashCode();
-        }
-
-        public void DisplayInfo()
-        {
-            Console.WriteLine("Журнал: " + Title + " | Працівників: " + EmployeesCount);
+            if (row >= 0 && row < Rows && col >= 0 && col < Cols)
+                _data[row, col] = value;
+            else
+                throw new IndexOutOfRangeException("Некоректний індекс матриці!");
         }
     }
 
-    public class Shop
+    public static Matrix operator +(Matrix a, Matrix b)
     {
-        public string Name { get; set; }
-        private double area;
+        if (a.Rows != b.Rows || a.Cols != b.Cols)
+            throw new ArgumentException("Матриці повинні бути одного розміру!");
 
-        public double Area
+        Matrix result = new Matrix(a.Rows, a.Cols);
+        for (int i = 0; i < a.Rows; i++)
         {
-            get { return area; }
-            set
+            for (int j = 0; j < a.Cols; j++)
             {
-                if (value < 0)
-                {
-                    throw new ArgumentException("Площа магазину не може бути від'ємною.");
-                }
-                area = value;
+                result[i, j] = a[i, j] + b[i, j];
             }
         }
-
-        public Shop(string name, double area)
-        {
-            Name = name;
-            Area = area;
-        }
-
-        public static Shop operator +(Shop shop, double amount)
-        {
-            return new Shop(shop.Name, shop.Area + amount);
-        }
-
-        public static Shop operator -(Shop shop, double amount)
-        {
-            return new Shop(shop.Name, shop.Area - amount);
-        }
-
-        public static bool operator ==(Shop s1, Shop s2)
-        {
-            if (ReferenceEquals(s1, s2)) return true;
-            if (ReferenceEquals(s1, null) || ReferenceEquals(s2, null)) return false;
-            return s1.Area == s2.Area;
-        }
-
-        public static bool operator !=(Shop s1, Shop s2)
-        {
-            return !(s1 == s2);
-        }
-
-        public static bool operator <(Shop s1, Shop s2)
-        {
-            return s1.Area < s2.Area;
-        }
-
-        public static bool operator >(Shop s1, Shop s2)
-        {
-            return s1.Area > s2.Area;
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (obj is Shop shop)
-            {
-                return this.Area == shop.Area;
-            }
-            return false;
-        }
-
-        public override int GetHashCode()
-        {
-            return Area.GetHashCode();
-        }
-
-        public void DisplayInfo()
-        {
-            Console.WriteLine("Магазин: " + Name + " | Площа: " + Area + " кв.м.");
-        }
+        return result;
     }
 
-    public class BookList
+    public static Matrix operator -(Matrix a, Matrix b)
     {
-        private List<string> books;
+        if (a.Rows != b.Rows || a.Cols != b.Cols)
+            throw new ArgumentException("Матриці повинні бути одного розміру!");
 
-        public int Count
+        Matrix result = new Matrix(a.Rows, a.Cols);
+        for (int i = 0; i < a.Rows; i++)
         {
-            get { return books.Count; }
-        }
-
-        public BookList()
-        {
-            books = new List<string>();
-        }
-
-        public string this[int index]
-        {
-            get
+            for (int j = 0; j < a.Cols; j++)
             {
-                if (index < 0 || index >= books.Count)
-                {
-                    throw new IndexOutOfRangeException("Некоректний індекс книги.");
-                }
-                return books[index];
-            }
-            set
-            {
-                if (index < 0 || index >= books.Count)
-                {
-                    throw new IndexOutOfRangeException("Некоректний індекс книги.");
-                }
-                books[index] = value;
+                result[i, j] = a[i, j] - b[i, j];
             }
         }
-
-        public static BookList operator +(BookList list, string book)
-        {
-            if (!string.IsNullOrEmpty(book) && !list.Contains(book))
-            {
-                list.books.Add(book);
-            }
-            return list;
-        }
-
-        public static BookList operator -(BookList list, string book)
-        {
-            list.books.Remove(book);
-            return list;
-        }
-
-        public bool Contains(string book)
-        {
-            return books.Contains(book);
-        }
-
-        public void DisplayBooks()
-        {
-            Console.WriteLine("=== Список книг до прочитання ===");
-            if (books.Count == 0)
-            {
-                Console.WriteLine("Список порожній.");
-                return;
-            }
-
-            for (int i = 0; i < books.Count; i++)
-            {
-                Console.WriteLine((i + 1) + ". " + books[i]);
-            }
-        }
+        return result;
     }
 
-    class Program
+    public static Matrix operator *(Matrix a, int number)
     {
-        static void Main(string[] args)
+        Matrix result = new Matrix(a.Rows, a.Cols);
+        for (int i = 0; i < a.Rows; i++)
         {
-            Console.OutputEncoding = System.Text.Encoding.UTF8;
-
-            try
+            for (int j = 0; j < a.Cols; j++)
             {
-                Console.WriteLine("--- ЗАВДАННЯ 1: Журнал ---");
-                Journal j1 = new Journal("IT World", 10);
-                Journal j2 = new Journal("Science", 15);
-
-                j1 = j1 + 5;
-                j1.DisplayInfo();
-
-                Console.WriteLine("j1 == j2: " + (j1 == j2));
-                Console.WriteLine("j1 > j2: " + (j1 > j2));
-                Console.WriteLine("Equals: " + j1.Equals(j2));
-                Console.WriteLine();
-
-                Console.WriteLine("--- ЗАВДАННЯ 2: Магазин ---");
-                Shop s1 = new Shop("Продукти", 150.5);
-                Shop s2 = new Shop("Одяг", 200.0);
-
-                s1 = s1 + 49.5;
-                s1.DisplayInfo();
-
-                Console.WriteLine("s1 == s2: " + (s1 == s2));
-                Console.WriteLine("s1 < s2: " + (s1 < s2));
-                Console.WriteLine();
-
-                Console.WriteLine("--- ЗАВДАННЯ 3: Список книг ---");
-                BookList readingList = new BookList();
-
-                readingList = readingList + "Кобзар";
-                readingList = readingList + "1984";
-                readingList = readingList + "Майстер і Маргарита";
-
-                readingList.DisplayBooks();
-
-                Console.WriteLine("\nЧи є книга '1984' у списку? " + readingList.Contains("1984"));
-
-                Console.WriteLine("\nКнига за індексом 0: " + readingList[0]);
-
-                readingList = readingList - "1984";
-                Console.WriteLine("\nПісля видалення '1984':");
-                readingList.DisplayBooks();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Помилка: " + ex.Message);
+                result[i, j] = a[i, j] * number;
             }
         }
+        return result;
+    }
+
+    public static Matrix operator *(int number, Matrix a)
+    {
+        return a * number;
+    }
+
+    public static Matrix operator *(Matrix a, Matrix b)
+    {
+        if (a.Cols != b.Rows)
+            throw new ArgumentException("Неможливо помножити дані матриці!");
+
+        Matrix result = new Matrix(a.Rows, b.Cols);
+        for (int i = 0; i < a.Rows; i++)
+        {
+            for (int j = 0; j < b.Cols; j++)
+            {
+                for (int k = 0; k < a.Cols; k++)
+                {
+                    result[i, j] += a[i, k] * b[k, j];
+                }
+            }
+        }
+        return result;
+    }
+
+    public static bool operator ==(Matrix a, Matrix b)
+    {
+        if (ReferenceEquals(a, b)) return true;
+        if (a is null || b is null) return false;
+
+        if (a.Rows != b.Rows || a.Cols != b.Cols) return false;
+
+        for (int i = 0; i < a.Rows; i++)
+        {
+            for (int j = 0; j < a.Cols; j++)
+            {
+                if (a[i, j] != b[i, j]) return false;
+            }
+        }
+        return true;
+    }
+
+    public static bool operator !=(Matrix a, Matrix b)
+    {
+        return !(a == b);
+    }
+
+    public override bool Equals(object obj)
+    {
+        if (obj is Matrix other)
+        {
+            return this == other;
+        }
+        return false;
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Rows, Cols, _data);
+    }
+
+    public override string ToString()
+    {
+        string result = "";
+        for (int i = 0; i < Rows; i++)
+        {
+            for (int j = 0; j < Cols; j++)
+            {
+                result += $"{_data[i, j]}\t";
+            }
+            result += "\n";
+        }
+        return result;
+    }
+}
+
+class Program
+{
+    static void Main()
+    {
+        Employee emp1 = new Employee("Іван", 15000);
+        Employee emp2 = new Employee("Олег", 12000);
+
+        emp1 += 2000;
+        Console.WriteLine(emp1);
+
+        emp2++;
+        Console.WriteLine(emp2);
+
+        emp2--;
+        Console.WriteLine(emp2);
+
+        Console.WriteLine($"emp1 > emp2: {emp1 > emp2}");
+        Console.WriteLine($"emp1 == emp2: {emp1 == emp2}");
+
+        Matrix m1 = new Matrix(2, 2);
+        m1[0, 0] = 1; m1[0, 1] = 2;
+        m1[1, 0] = 3; m1[1, 1] = 4;
+
+        Matrix m2 = new Matrix(2, 2);
+        m2[0, 0] = 5; m2[0, 1] = 6;
+        m2[1, 0] = 7; m2[1, 1] = 8;
+
+        Console.WriteLine("\nMatrix 1:");
+        Console.WriteLine(m1);
+
+        Console.WriteLine("Matrix 2:");
+        Console.WriteLine(m2);
+
+        Console.WriteLine("m1 + m2:");
+        Console.WriteLine(m1 + m2);
+
+        Console.WriteLine("m1 * 2:");
+        Console.WriteLine(m1 * 2);
+
+        Console.WriteLine("m1 * m2:");
+        Console.WriteLine(m1 * m2);
+
+        Console.WriteLine($"m1 == m2: {m1 == m2}");
     }
 }

@@ -1,280 +1,406 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Text;
 
-internal class Employee
+namespace DocumentProcessingSystem
 {
-    public string Name { get; set; }
-    public decimal Salary { get; set; }
-
-    public Employee()
+    public interface ITextProcessor
     {
-        Name = "Unknown";
-        Salary = 0;
+        string ProcessText();
+        int CountWords();
+        bool ContainsWord(string word);
     }
 
-    public Employee(string name, decimal salary)
-    {
-        Name = name;
-        Salary = salary < 0 ? 0 : salary;
-    }
+    public record DocumentStatistics(int WordCount, int CharacterCount, string LongestWord, int UniqueWordCount);
 
-    public static Employee operator +(Employee emp, decimal value)
-    {
-        return new Employee(emp.Name, emp.Salary + value);
-    }
+    public record DocumentSummary(string Title, string Author, string DocumentType, int WordCount);
 
-    public static Employee operator -(Employee emp, decimal value)
+    public class Document : ITextProcessor
     {
-        decimal newSalary = emp.Salary - value;
-        return new Employee(emp.Name, newSalary < 0 ? 0 : newSalary);
-    }
+        private string title;
+        private string author;
+        private string text;
+        private DateTime createdAt;
 
-    public static Employee operator ++(Employee emp)
-    {
-        emp.Salary += 500;
-        return emp;
-    }
-
-    public static Employee operator --(Employee emp)
-    {
-        emp.Salary = emp.Salary - 500 < 0 ? 0 : emp.Salary - 500;
-        return emp;
-    }
-
-    public static bool operator <(Employee left, Employee right)
-    {
-        return left.Salary < right.Salary;
-    }
-
-    public static bool operator >(Employee left, Employee right)
-    {
-        return left.Salary > right.Salary;
-    }
-
-    public static bool operator ==(Employee left, Employee right)
-    {
-        if (ReferenceEquals(left, right)) return true;
-        if (left is null || right is null) return false;
-        return left.Salary == right.Salary;
-    }
-
-    public static bool operator !=(Employee left, Employee right)
-    {
-        return !(left == right);
-    }
-
-    public override bool Equals(object obj)
-    {
-        if (obj is Employee other)
+        public string Title
         {
-            return this.Salary == other.Salary;
+            get { return title; }
+            set { title = value; }
         }
-        return false;
-    }
 
-    public override int GetHashCode()
-    {
-        return Salary.GetHashCode();
-    }
-
-    public override string ToString()
-    {
-        return $"Співробітник: {Name}, Зарплата: {Salary}";
-    }
-}
-
-internal class Matrix
-{
-    private int[,] _data;
-
-    public int Rows { get; }
-    public int Cols { get; }
-
-    public Matrix(int rows, int cols)
-    {
-        Rows = rows;
-        Cols = cols;
-        _data = new int[rows, cols];
-    }
-
-    public int this[int row, int col]
-    {
-        get
+        public string Author
         {
-            if (row >= 0 && row < Rows && col >= 0 && col < Cols)
-                return _data[row, col];
-            throw new IndexOutOfRangeException("Некоректний індекс матриці!");
+            get { return author; }
+            set { author = value; }
         }
-        set
+
+        public string Text
         {
-            if (row >= 0 && row < Rows && col >= 0 && col < Cols)
-                _data[row, col] = value;
-            else
-                throw new IndexOutOfRangeException("Некоректний індекс матриці!");
+            get { return text; }
+            set { text = value; }
         }
-    }
 
-    public static Matrix operator +(Matrix a, Matrix b)
-    {
-        if (a.Rows != b.Rows || a.Cols != b.Cols)
-            throw new ArgumentException("Матриці повинні бути одного розміру!");
-
-        Matrix result = new Matrix(a.Rows, a.Cols);
-        for (int i = 0; i < a.Rows; i++)
+        public DateTime CreatedAt
         {
-            for (int j = 0; j < a.Cols; j++)
+            get { return createdAt; }
+            set { createdAt = value; }
+        }
+
+        public Document(string title, string author, string text)
+        {
+            this.title = title;
+            this.author = author;
+            this.text = text;
+            this.createdAt = DateTime.Now;
+        }
+
+        public virtual string GetInfo()
+        {
+            return "Назва: " + Title + "\nАвтор: " + Author + "\nДата створення: " + CreatedAt.ToShortDateString() + "\nКількість слів: " + CountWords();
+        }
+
+        public string ProcessText()
+        {
+            if (text == null)
             {
-                result[i, j] = a[i, j] + b[i, j];
+                return "";
             }
+            return text.Trim();
         }
-        return result;
-    }
 
-    public static Matrix operator -(Matrix a, Matrix b)
-    {
-        if (a.Rows != b.Rows || a.Cols != b.Cols)
-            throw new ArgumentException("Матриці повинні бути одного розміру!");
-
-        Matrix result = new Matrix(a.Rows, a.Cols);
-        for (int i = 0; i < a.Rows; i++)
+        public string[] GetCleanWords()
         {
-            for (int j = 0; j < a.Cols; j++)
-            {
-                result[i, j] = a[i, j] - b[i, j];
-            }
+            string cleaned = ProcessText();
+            char[] separators = new char[] { ' ', '.', ',', '!', '?', '-', ':', ';', '(', ')', '"', '\n', '\r' };
+            return cleaned.Split(separators, StringSplitOptions.RemoveEmptyEntries);
         }
-        return result;
-    }
 
-    public static Matrix operator *(Matrix a, int number)
-    {
-        Matrix result = new Matrix(a.Rows, a.Cols);
-        for (int i = 0; i < a.Rows; i++)
+        public int CountWords()
         {
-            for (int j = 0; j < a.Cols; j++)
-            {
-                result[i, j] = a[i, j] * number;
-            }
+            string[] words = GetCleanWords();
+            return words.Length;
         }
-        return result;
-    }
 
-    public static Matrix operator *(int number, Matrix a)
-    {
-        return a * number;
-    }
-
-    public static Matrix operator *(Matrix a, Matrix b)
-    {
-        if (a.Cols != b.Rows)
-            throw new ArgumentException("Неможливо помножити дані матриці!");
-
-        Matrix result = new Matrix(a.Rows, b.Cols);
-        for (int i = 0; i < a.Rows; i++)
+        public bool ContainsWord(string word)
         {
-            for (int j = 0; j < b.Cols; j++)
+            string[] words = GetCleanWords();
+            for (int i = 0; i < words.Length; i++)
             {
-                for (int k = 0; k < a.Cols; k++)
+                if (words[i].ToLower() == word.ToLower())
                 {
-                    result[i, j] += a[i, k] * b[k, j];
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public DocumentStatistics AnalyzeDocument()
+        {
+            string[] words = GetCleanWords();
+            int wordCount = words.Length;
+            int charCount = Text.Length;
+            string longestWord = "";
+            List<string> uniqueWords = new List<string>();
+
+            for (int i = 0; i < words.Length; i++)
+            {
+                if (words[i].Length > longestWord.Length)
+                {
+                    longestWord = words[i];
+                }
+
+                string lowerWord = words[i].ToLower();
+                if (!uniqueWords.Contains(lowerWord))
+                {
+                    uniqueWords.Add(lowerWord);
+                }
+            }
+
+            return new DocumentStatistics(wordCount, charCount, longestWord, uniqueWords.Count);
+        }
+    }
+
+    public class Article : Document
+    {
+        private string category;
+        private int readTime;
+
+        public string Category
+        {
+            get { return category; }
+            set { category = value; }
+        }
+
+        public int ReadTime
+        {
+            get { return readTime; }
+            set { readTime = value; }
+        }
+
+        public Article(string title, string author, string text, string category, int readTime)
+            : base(title, author, text)
+        {
+            this.category = category;
+            this.readTime = readTime;
+        }
+
+        public override string GetInfo()
+        {
+            return "[Стаття]\n" + base.GetInfo() + "\nКатегорія: " + Category + "\nЧас читання: " + ReadTime + " хв.";
+        }
+    }
+
+    public class Report : Document
+    {
+        private string department;
+        private int pageCount;
+
+        public string Department
+        {
+            get { return department; }
+            set { department = value; }
+        }
+
+        public int PageCount
+        {
+            get { return pageCount; }
+            set { pageCount = value; }
+        }
+
+        public Report(string title, string author, string text, string department, int pageCount)
+            : base(title, author, text)
+        {
+            this.department = department;
+            this.pageCount = pageCount;
+        }
+
+        public override string GetInfo()
+        {
+            return "[Звіт]\n" + base.GetInfo() + "\nВідділ: " + Department + "\nКількість сторінок: " + PageCount;
+        }
+    }
+
+    public class ReportGenerator
+    {
+        public string GenerateFullReport(List<Document> documents)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("=== ЗАГАЛЬНИЙ ЗВІТ ПРО ДОКУМЕНТИ ===");
+            sb.AppendLine();
+
+            int totalWords = 0;
+            int totalChars = 0;
+
+            for (int i = 0; i < documents.Count; i++)
+            {
+                Document doc = documents[i];
+                DocumentStatistics stats = doc.AnalyzeDocument();
+
+                sb.Append("Документ №");
+                sb.AppendLine((i + 1).ToString());
+                sb.AppendLine(doc.GetInfo());
+                sb.AppendLine("--- Статистика тексту ---");
+                sb.Append("Кількість слів: ");
+                sb.AppendLine(stats.WordCount.ToString());
+                sb.Append("Кількість символів: ");
+                sb.AppendLine(stats.CharacterCount.ToString());
+                sb.Append("Найдовше слово: ");
+                sb.AppendLine(stats.LongestWord);
+                sb.Append("Унікальних слів: ");
+                sb.AppendLine(stats.UniqueWordCount.ToString());
+                sb.AppendLine("-------------------------");
+                sb.AppendLine();
+
+                totalWords += stats.WordCount;
+                totalChars += stats.CharacterCount;
+            }
+
+            sb.AppendLine("=== ЗАГАЛЬНИЙ ПІДСУМОК ===");
+            sb.Append("Всього документів: ");
+            sb.AppendLine(documents.Count.ToString());
+            sb.Append("Загальна кількість слів: ");
+            sb.AppendLine(totalWords.ToString());
+            sb.Append("Загальна кількість символів: ");
+            sb.AppendLine(totalChars.ToString());
+
+            return sb.ToString();
+        }
+    }
+
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            Console.OutputEncoding = Encoding.UTF8;
+            Console.InputEncoding = Encoding.UTF8;
+
+            List<Document> documents = new List<Document>();
+            ReportGenerator reportGenerator = new ReportGenerator();
+            bool isRunning = true;
+
+            while (isRunning)
+            {
+                Console.WriteLine("\nСИСТЕМА ОБРОБКИ ДОКУМЕНТІВ");
+                Console.WriteLine("1. Додати статтю");
+                Console.WriteLine("2. Додати звіт");
+                Console.WriteLine("3. Показати всі документи");
+                Console.WriteLine("4. Знайти документи за словом");
+                Console.WriteLine("5. Показати статистику документа");
+                Console.WriteLine("6. Згенерувати загальний звіт");
+                Console.WriteLine("7. Вийти");
+                Console.Write("\nОберіть дію: ");
+
+                string choice = Console.ReadLine();
+                Console.WriteLine();
+
+                if (choice == "1")
+                {
+                    Console.Write("Введіть назву статті: ");
+                    string title = Console.ReadLine();
+
+                    Console.Write("Введіть автора: ");
+                    string author = Console.ReadLine();
+
+                    Console.Write("Введіть категорію: ");
+                    string category = Console.ReadLine();
+
+                    Console.Write("Введіть час читання: ");
+                    int readTime = int.Parse(Console.ReadLine());
+
+                    Console.WriteLine("Введіть текст:");
+                    string text = Console.ReadLine();
+
+                    Article article = new Article(title, author, text, category, readTime);
+                    documents.Add(article);
+
+                    Console.WriteLine("\nДокумент успішно створено!");
+                }
+                else if (choice == "2")
+                {
+                    Console.Write("Введіть назву звіту: ");
+                    string title = Console.ReadLine();
+
+                    Console.Write("Введіть автора: ");
+                    string author = Console.ReadLine();
+
+                    Console.Write("Введіть відділ: ");
+                    string department = Console.ReadLine();
+
+                    Console.Write("Введіть кількість сторінок: ");
+                    int pageCount = int.Parse(Console.ReadLine());
+
+                    Console.WriteLine("Введіть текст:");
+                    string text = Console.ReadLine();
+
+                    Report report = new Report(title, author, text, department, pageCount);
+                    documents.Add(report);
+
+                    Console.WriteLine("\nДокумент успішно створено!");
+                }
+                else if (choice == "3")
+                {
+                    if (documents.Count == 0)
+                    {
+                        Console.WriteLine("Список документів порожній.");
+                    }
+                    else
+                    {
+                        for (int i = 0; i < documents.Count; i++)
+                        {
+                            Document doc = documents[i];
+                            string docType = "Документ";
+                            if (doc is Article)
+                            {
+                                docType = "Стаття";
+                            }
+                            else if (doc is Report)
+                            {
+                                docType = "Звіт";
+                            }
+
+                            DocumentSummary summary = new DocumentSummary(doc.Title, doc.Author, docType, doc.CountWords());
+                            Console.WriteLine((i + 1) + ". " + summary.Title + " (Автор: " + summary.Author + ", Тип: " + summary.DocumentType + ", Слів: " + summary.WordCount + ")");
+
+                            if (i == 0)
+                            {
+                                DocumentSummary copySummary = summary with { Title = summary.Title + " (Копія)" };
+                                Console.WriteLine("   Приклад копії через with: " + copySummary.Title + ", Автор: " + copySummary.Author);
+                            }
+                        }
+                    }
+                }
+                else if (choice == "4")
+                {
+                    Console.Write("Введіть слово для пошуку: ");
+                    string word = Console.ReadLine();
+                    Console.WriteLine();
+
+                    bool found = false;
+                    for (int i = 0; i < documents.Count; i++)
+                    {
+                        if (documents[i].ContainsWord(word))
+                        {
+                            Console.WriteLine("Знайдено документ:");
+                            Console.WriteLine(documents[i].Title);
+                            Console.WriteLine("Автор: " + documents[i].Author);
+                            Console.WriteLine("Кількість слів: " + documents[i].CountWords());
+                            Console.WriteLine();
+                            found = true;
+                        }
+                    }
+
+                    if (!found)
+                    {
+                        Console.WriteLine("Документів із таким словом не знайдено.");
+                    }
+                }
+                else if (choice == "5")
+                {
+                    if (documents.Count == 0)
+                    {
+                        Console.WriteLine("Список документів порожній.");
+                    }
+                    else
+                    {
+                        Console.Write("Введіть номер документа (від 1 до " + documents.Count + "): ");
+                        int index = int.Parse(Console.ReadLine()) - 1;
+
+                        if (index >= 0 && index < documents.Count)
+                        {
+                            DocumentStatistics stats = documents[index].AnalyzeDocument();
+                            Console.WriteLine("\nСтатистика документа '" + documents[index].Title + "':");
+                            Console.WriteLine("Кількість слів: " + stats.WordCount);
+                            Console.WriteLine("Кількість символів: " + stats.CharacterCount);
+                            Console.WriteLine("Найдовше слово: " + stats.LongestWord);
+                            Console.WriteLine("Кількість унікальних слів: " + stats.UniqueWordCount);
+                        }
+                        else
+                        {
+                            Console.WriteLine("Невірний номер документа.");
+                        }
+                    }
+                }
+                else if (choice == "6")
+                {
+                    if (documents.Count == 0)
+                    {
+                        Console.WriteLine("Немає документів для генерації звіту.");
+                    }
+                    else
+                    {
+                        string fullReport = reportGenerator.GenerateFullReport(documents);
+                        Console.WriteLine(fullReport);
+                    }
+                }
+                else if (choice == "7")
+                {
+                    isRunning = false;
+                }
+                else
+                {
+                    Console.WriteLine("Невірний вибір. Спробуйте ще раз.");
                 }
             }
         }
-        return result;
-    }
-
-    public static bool operator ==(Matrix a, Matrix b)
-    {
-        if (ReferenceEquals(a, b)) return true;
-        if (a is null || b is null) return false;
-
-        if (a.Rows != b.Rows || a.Cols != b.Cols) return false;
-
-        for (int i = 0; i < a.Rows; i++)
-        {
-            for (int j = 0; j < a.Cols; j++)
-            {
-                if (a[i, j] != b[i, j]) return false;
-            }
-        }
-        return true;
-    }
-
-    public static bool operator !=(Matrix a, Matrix b)
-    {
-        return !(a == b);
-    }
-
-    public override bool Equals(object obj)
-    {
-        if (obj is Matrix other)
-        {
-            return this == other;
-        }
-        return false;
-    }
-
-    public override int GetHashCode()
-    {
-        return HashCode.Combine(Rows, Cols, _data);
-    }
-
-    public override string ToString()
-    {
-        string result = "";
-        for (int i = 0; i < Rows; i++)
-        {
-            for (int j = 0; j < Cols; j++)
-            {
-                result += $"{_data[i, j]}\t";
-            }
-            result += "\n";
-        }
-        return result;
-    }
-}
-
-class Program
-{
-    static void Main()
-    {
-        Employee emp1 = new Employee("Іван", 15000);
-        Employee emp2 = new Employee("Олег", 12000);
-
-        emp1 += 2000;
-        Console.WriteLine(emp1);
-
-        emp2++;
-        Console.WriteLine(emp2);
-
-        emp2--;
-        Console.WriteLine(emp2);
-
-        Console.WriteLine($"emp1 > emp2: {emp1 > emp2}");
-        Console.WriteLine($"emp1 == emp2: {emp1 == emp2}");
-
-        Matrix m1 = new Matrix(2, 2);
-        m1[0, 0] = 1; m1[0, 1] = 2;
-        m1[1, 0] = 3; m1[1, 1] = 4;
-
-        Matrix m2 = new Matrix(2, 2);
-        m2[0, 0] = 5; m2[0, 1] = 6;
-        m2[1, 0] = 7; m2[1, 1] = 8;
-
-        Console.WriteLine("\nMatrix 1:");
-        Console.WriteLine(m1);
-
-        Console.WriteLine("Matrix 2:");
-        Console.WriteLine(m2);
-
-        Console.WriteLine("m1 + m2:");
-        Console.WriteLine(m1 + m2);
-
-        Console.WriteLine("m1 * 2:");
-        Console.WriteLine(m1 * 2);
-
-        Console.WriteLine("m1 * m2:");
-        Console.WriteLine(m1 * m2);
-
-        Console.WriteLine($"m1 == m2: {m1 == m2}");
     }
 }

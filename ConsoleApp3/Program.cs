@@ -1,595 +1,248 @@
 using System;
-using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace GenericsTasks
+namespace GarbageCollectorAndDisposableTasks
 {
-    public class PriorityNode<T>
+    public enum ShopType
     {
-        public T Data { get; set; }
-        public int Priority { get; set; }
+        Grocery,
+        Household,
+        Clothing,
+        Footwear
+    }
 
-        public PriorityNode(T data, int priority)
+    public class Play : IDisposable
+    {
+        private string title;
+        private string authorFullName;
+        private string genre;
+        private int releaseYear;
+        private bool isDisposed;
+
+        public string Title
         {
-            Data = data;
-            Priority = priority;
+            get { return title; }
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    throw new ArgumentException("Назва п'єси не може бути порожньою.");
+                }
+                title = value;
+            }
+        }
+
+        public string AuthorFullName
+        {
+            get { return authorFullName; }
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    throw new ArgumentException("П.І.Б. автора не може бути порожнім.");
+                }
+                authorFullName = value;
+            }
+        }
+
+        public string Genre
+        {
+            get { return genre; }
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    throw new ArgumentException("Жанр не може бути порожнім.");
+                }
+                genre = value;
+            }
+        }
+
+        public int ReleaseYear
+        {
+            get { return releaseYear; }
+            set
+            {
+                if (value <= 0 || value > DateTime.Now.Year)
+                {
+                    throw new ArgumentException("Некоректний рік випуску п'єси.");
+                }
+                releaseYear = value;
+            }
+        }
+
+        public Play(string title, string authorFullName, string genre, int releaseYear)
+        {
+            this.title = string.Empty;
+            this.authorFullName = string.Empty;
+            this.genre = string.Empty;
+
+            Title = title;
+            AuthorFullName = authorFullName;
+            Genre = genre;
+            ReleaseYear = releaseYear;
+            isDisposed = false;
+        }
+
+        public void DisplayInfo()
+        {
+            if (isDisposed)
+            {
+                throw new ObjectDisposedException(nameof(Play), "Об'єкт п'єси вже звільнено.");
+            }
+
+            Console.WriteLine("П'єса: «" + Title + "»");
+            Console.WriteLine("Автор: " + AuthorFullName);
+            Console.WriteLine("Жанр: " + Genre);
+            Console.WriteLine("Рік випуску: " + ReleaseYear);
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!isDisposed)
+            {
+                if (disposing)
+                {
+                    Console.WriteLine("[Dispose] Ресурси п'єси «" + Title + "» звільнено через метод Dispose().");
+                }
+
+                isDisposed = true;
+            }
+        }
+
+        ~Play()
+        {
+            Dispose(false);
+            Console.WriteLine("[Деструктор] Об'єкт п'єси «" + Title + "» видалено збирачем сміття.");
         }
     }
 
-    public class PriorityQueue<T>
+    public class Shop : IDisposable
     {
-        private List<PriorityNode<T>> items;
+        private string name;
+        private string address;
+        private ShopType shopType;
+        private bool isDisposed;
 
-        public int Count
+        public string Name
         {
-            get { return items.Count; }
-        }
-
-        public bool IsEmpty
-        {
-            get { return items.Count == 0; }
-        }
-
-        public PriorityQueue()
-        {
-            items = new List<PriorityNode<T>>();
-        }
-
-        public void Enqueue(T item, int priority)
-        {
-            PriorityNode<T> newNode = new PriorityNode<T>(item, priority);
-
-            int insertIndex = items.Count;
-            for (int i = 0; i < items.Count; i++)
+            get { return name; }
+            set
             {
-                if (priority > items[i].Priority)
+                if (string.IsNullOrWhiteSpace(value))
                 {
-                    insertIndex = i;
-                    break;
+                    throw new ArgumentException("Назва магазину не може бути порожньою.");
                 }
+                name = value;
             }
-
-            items.Insert(insertIndex, newNode);
         }
 
-        public T Dequeue()
+        public string Address
         {
-            if (IsEmpty)
+            get { return address; }
+            set
             {
-                throw new InvalidOperationException("Черга з пріоритетами порожня.");
-            }
-
-            T value = items[0].Data;
-            items.RemoveAt(0);
-            return value;
-        }
-
-        public T Peek()
-        {
-            if (IsEmpty)
-            {
-                throw new InvalidOperationException("Черга з пріоритетами порожня.");
-            }
-
-            return items[0].Data;
-        }
-
-        public void Clear()
-        {
-            items.Clear();
-        }
-
-        public void Display()
-        {
-            if (IsEmpty)
-            {
-                Console.WriteLine("Черга з пріоритетами порожня.");
-                return;
-            }
-
-            Console.Write("Черга з пріоритетами (кількість: " + Count + "): ");
-            for (int i = 0; i < items.Count; i++)
-            {
-                Console.Write("[" + items[i].Data + " (пріоритет: " + items[i].Priority + ")] ");
-            }
-            Console.WriteLine();
-        }
-    }
-
-    public class CircularQueue<T>
-    {
-        private T[] buffer;
-        private int head;
-        private int tail;
-        private int count;
-        private int capacity;
-
-        public int Capacity
-        {
-            get { return capacity; }
-        }
-
-        public int Count
-        {
-            get { return count; }
-        }
-
-        public bool IsEmpty
-        {
-            get { return count == 0; }
-        }
-
-        public bool IsFull
-        {
-            get { return count == capacity; }
-        }
-
-        public CircularQueue(int capacity)
-        {
-            if (capacity <= 0)
-            {
-                throw new ArgumentException("Розмір кільцевої черги повинен бути більшим за нуль.");
-            }
-
-            this.capacity = capacity;
-            buffer = new T[capacity];
-            head = 0;
-            tail = 0;
-            count = 0;
-        }
-
-        public void Enqueue(T item)
-        {
-            if (IsFull)
-            {
-                throw new InvalidOperationException("Кільцева черга заповнена.");
-            }
-
-            buffer[tail] = item;
-            tail = (tail + 1) % capacity;
-            count++;
-        }
-
-        public T Dequeue()
-        {
-            if (IsEmpty)
-            {
-                throw new InvalidOperationException("Кільцева черга порожня.");
-            }
-
-            T item = buffer[head];
-            buffer[head] = default!;
-            head = (head + 1) % capacity;
-            count--;
-            return item;
-        }
-
-        public T Peek()
-        {
-            if (IsEmpty)
-            {
-                throw new InvalidOperationException("Кільцева черга порожня.");
-            }
-
-            return buffer[head];
-        }
-
-        public void Clear()
-        {
-            buffer = new T[capacity];
-            head = 0;
-            tail = 0;
-            count = 0;
-        }
-
-        public void Display()
-        {
-            if (IsEmpty)
-            {
-                Console.WriteLine("Кільцева черга порожня.");
-                return;
-            }
-
-            Console.Write("Кільцева черга (" + Count + "/" + Capacity + "): ");
-            for (int i = 0; i < count; i++)
-            {
-                int index = (head + i) % capacity;
-                Console.Write(buffer[index] + " ");
-            }
-            Console.WriteLine();
-        }
-    }
-
-    public class SinglyNode<T>
-    {
-        public T Data { get; set; }
-        public SinglyNode<T>? Next { get; set; }
-
-        public SinglyNode(T data)
-        {
-            Data = data;
-            Next = null;
-        }
-    }
-
-    public class SinglyLinkedList<T>
-    {
-        private SinglyNode<T>? head;
-        private SinglyNode<T>? tail;
-        private int count;
-
-        public int Count
-        {
-            get { return count; }
-        }
-
-        public bool IsEmpty
-        {
-            get { return count == 0; }
-        }
-
-        public void AddFirst(T data)
-        {
-            SinglyNode<T> newNode = new SinglyNode<T>(data);
-
-            if (head == null)
-            {
-                head = newNode;
-                tail = newNode;
-            }
-            else
-            {
-                newNode.Next = head;
-                head = newNode;
-            }
-
-            count++;
-        }
-
-        public void AddLast(T data)
-        {
-            SinglyNode<T> newNode = new SinglyNode<T>(data);
-
-            if (head == null)
-            {
-                head = newNode;
-                tail = newNode;
-            }
-            else
-            {
-                tail!.Next = newNode;
-                tail = newNode;
-            }
-
-            count++;
-        }
-
-        public T RemoveFirst()
-        {
-            if (head == null)
-            {
-                throw new InvalidOperationException("Однозв'язний список порожній.");
-            }
-
-            T removedData = head.Data;
-            head = head.Next;
-            count--;
-
-            if (head == null)
-            {
-                tail = null;
-            }
-
-            return removedData;
-        }
-
-        public T RemoveLast()
-        {
-            if (head == null)
-            {
-                throw new InvalidOperationException("Однозв'язний список порожній.");
-            }
-
-            if (head.Next == null)
-            {
-                T singleData = head.Data;
-                head = null;
-                tail = null;
-                count = 0;
-                return singleData;
-            }
-
-            SinglyNode<T> current = head;
-            while (current.Next != null && current.Next != tail)
-            {
-                current = current.Next;
-            }
-
-            T removedData = tail!.Data;
-            current.Next = null;
-            tail = current;
-            count--;
-
-            return removedData;
-        }
-
-        public bool Remove(T data)
-        {
-            if (head == null)
-            {
-                return false;
-            }
-
-            if (EqualityComparer<T>.Default.Equals(head.Data, data))
-            {
-                RemoveFirst();
-                return true;
-            }
-
-            SinglyNode<T> current = head;
-            while (current.Next != null)
-            {
-                if (EqualityComparer<T>.Default.Equals(current.Next.Data, data))
+                if (string.IsNullOrWhiteSpace(value))
                 {
-                    if (current.Next == tail)
-                    {
-                        tail = current;
-                    }
+                    throw new ArgumentException("Адреса магазину не може бути порожньою.");
+                }
+                address = value;
+            }
+        }
 
-                    current.Next = current.Next.Next;
-                    count--;
-                    return true;
+        public ShopType Type
+        {
+            get { return shopType; }
+            set { shopType = value; }
+        }
+
+        public Shop(string name, string address, ShopType shopType)
+        {
+            this.name = string.Empty;
+            this.address = string.Empty;
+
+            Name = name;
+            Address = address;
+            Type = shopType;
+            isDisposed = false;
+        }
+
+        public static string GetShopTypeName(ShopType type)
+        {
+            switch (type)
+            {
+                case ShopType.Grocery:
+                    return "Продовольчий";
+                case ShopType.Household:
+                    return "Господарський";
+                case ShopType.Clothing:
+                    return "Одяг";
+                case ShopType.Footwear:
+                    return "Взуття";
+                default:
+                    return type.ToString();
+            }
+        }
+
+        public void DisplayInfo()
+        {
+            if (isDisposed)
+            {
+                throw new ObjectDisposedException(nameof(Shop), "Об'єкт магазину вже звільнено.");
+            }
+
+            Console.WriteLine("Магазин: «" + Name + "»");
+            Console.WriteLine("Адреса: " + Address);
+            Console.WriteLine("Тип магазину: " + GetShopTypeName(Type));
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!isDisposed)
+            {
+                if (disposing)
+                {
+                    Console.WriteLine("[Dispose] Ресурси магазину «" + Name + "» звільнено через метод Dispose().");
                 }
 
-                current = current.Next;
+                isDisposed = true;
             }
-
-            return false;
         }
 
-        public bool Contains(T data)
+        ~Shop()
         {
-            SinglyNode<T>? current = head;
-            while (current != null)
-            {
-                if (EqualityComparer<T>.Default.Equals(current.Data, data))
-                {
-                    return true;
-                }
-                current = current.Next;
-            }
-
-            return false;
-        }
-
-        public void Clear()
-        {
-            head = null;
-            tail = null;
-            count = 0;
-        }
-
-        public void Display()
-        {
-            Console.Write("Однозв'язний список (елементів: " + count + "): ");
-            SinglyNode<T>? current = head;
-            while (current != null)
-            {
-                Console.Write(current.Data + " -> ");
-                current = current.Next;
-            }
-            Console.WriteLine("null");
-        }
-    }
-
-    public class DoublyNode<T>
-    {
-        public T Data { get; set; }
-        public DoublyNode<T>? Previous { get; set; }
-        public DoublyNode<T>? Next { get; set; }
-
-        public DoublyNode(T data)
-        {
-            Data = data;
-            Previous = null;
-            Next = null;
-        }
-    }
-
-    public class DoublyLinkedList<T>
-    {
-        private DoublyNode<T>? head;
-        private DoublyNode<T>? tail;
-        private int count;
-
-        public int Count
-        {
-            get { return count; }
-        }
-
-        public bool IsEmpty
-        {
-            get { return count == 0; }
-        }
-
-        public void AddFirst(T data)
-        {
-            DoublyNode<T> newNode = new DoublyNode<T>(data);
-
-            if (head == null)
-            {
-                head = newNode;
-                tail = newNode;
-            }
-            else
-            {
-                newNode.Next = head;
-                head.Previous = newNode;
-                head = newNode;
-            }
-
-            count++;
-        }
-
-        public void AddLast(T data)
-        {
-            DoublyNode<T> newNode = new DoublyNode<T>(data);
-
-            if (tail == null)
-            {
-                head = newNode;
-                tail = newNode;
-            }
-            else
-            {
-                tail.Next = newNode;
-                newNode.Previous = tail;
-                tail = newNode;
-            }
-
-            count++;
-        }
-
-        public T RemoveFirst()
-        {
-            if (head == null)
-            {
-                throw new InvalidOperationException("Двозв'язний список порожній.");
-            }
-
-            T removedData = head.Data;
-            head = head.Next;
-
-            if (head != null)
-            {
-                head.Previous = null;
-            }
-            else
-            {
-                tail = null;
-            }
-
-            count--;
-            return removedData;
-        }
-
-        public T RemoveLast()
-        {
-            if (tail == null)
-            {
-                throw new InvalidOperationException("Двозв'язний список порожній.");
-            }
-
-            T removedData = tail.Data;
-            tail = tail.Previous;
-
-            if (tail != null)
-            {
-                tail.Next = null;
-            }
-            else
-            {
-                head = null;
-            }
-
-            count--;
-            return removedData;
-        }
-
-        public bool Remove(T data)
-        {
-            DoublyNode<T>? current = head;
-
-            while (current != null)
-            {
-                if (EqualityComparer<T>.Default.Equals(current.Data, data))
-                {
-                    if (current == head)
-                    {
-                        RemoveFirst();
-                    }
-                    else if (current == tail)
-                    {
-                        RemoveLast();
-                    }
-                    else
-                    {
-                        current.Previous!.Next = current.Next;
-                        current.Next!.Previous = current.Previous;
-                        count--;
-                    }
-
-                    return true;
-                }
-
-                current = current.Next;
-            }
-
-            return false;
-        }
-
-        public bool Contains(T data)
-        {
-            DoublyNode<T>? current = head;
-            while (current != null)
-            {
-                if (EqualityComparer<T>.Default.Equals(current.Data, data))
-                {
-                    return true;
-                }
-                current = current.Next;
-            }
-
-            return false;
-        }
-
-        public void Clear()
-        {
-            head = null;
-            tail = null;
-            count = 0;
-        }
-
-        public void DisplayForward()
-        {
-            Console.Write("Двозв'язний список (прямий порядок, елементів: " + count + "): null <- ");
-            DoublyNode<T>? current = head;
-            while (current != null)
-            {
-                Console.Write(current.Data);
-                if (current.Next != null)
-                {
-                    Console.Write(" <-> ");
-                }
-                current = current.Next;
-            }
-            Console.WriteLine(" -> null");
-        }
-
-        public void DisplayBackward()
-        {
-            Console.Write("Двозв'язний список (зворотний порядок): null <- ");
-            DoublyNode<T>? current = tail;
-            while (current != null)
-            {
-                Console.Write(current.Data);
-                if (current.Previous != null)
-                {
-                    Console.Write(" <-> ");
-                }
-                current = current.Previous;
-            }
-            Console.WriteLine(" -> null");
+            Dispose(false);
+            Console.WriteLine("[Деструктор] Об'єкт магазину «" + Name + "» видалено збирачем сміття.");
         }
     }
 
     class Program
     {
-        public static void Swap<T>(ref T first, ref T second)
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public static void CreatePlayWithoutDispose()
         {
-            T temp = first;
-            first = second;
-            second = temp;
+            Play tempPlay = new Play("Лісова пісня", "Косач Лариса Петрівна (Леся Українка)", "Драма-феєрія", 1911);
+            tempPlay.DisplayInfo();
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public static void CreateShopWithoutDispose()
+        {
+            Shop tempShop = new Shop("Епіцентр", "м. Київ, просп. Степана Бандери, 11-А", ShopType.Household);
+            tempShop.DisplayInfo();
         }
 
         static void Main(string[] args)
@@ -598,85 +251,35 @@ namespace GenericsTasks
 
             try
             {
-                Console.WriteLine("--- ЗАВДАННЯ 1: Generic-метод Swap ---");
-
-                int a = 15;
-                int b = 42;
-                Console.WriteLine("До обміну (int): a = " + a + ", b = " + b);
-                Swap(ref a, ref b);
-                Console.WriteLine("Після обміну (int): a = " + a + ", b = " + b);
-
-                string str1 = "Привіт";
-                string str2 = "Світ";
-                Console.WriteLine("До обміну (string): str1 = " + str1 + ", str2 = " + str2);
-                Swap(ref str1, ref str2);
-                Console.WriteLine("Після обміну (string): str1 = " + str1 + ", str2 = " + str2);
+                Console.WriteLine("--- ЗАВДАННЯ 1: Клас «П'єса» та тестування деструктора ---");
+                CreatePlayWithoutDispose();
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
                 Console.WriteLine();
 
-                Console.WriteLine("--- ЗАВДАННЯ 2: Generic-клас «Черга з пріоритетами» ---");
-
-                PriorityQueue<string> priorityQueue = new PriorityQueue<string>();
-                priorityQueue.Enqueue("Звичайне завдання", 1);
-                priorityQueue.Enqueue("Критичне виправлення", 3);
-                priorityQueue.Enqueue("Важливий звіт", 2);
-                priorityQueue.Enqueue("Терміновий виклик", 3);
-
-                priorityQueue.Display();
-                Console.WriteLine("Перший елемент (Peek): " + priorityQueue.Peek());
-                Console.WriteLine("Вилучено (Dequeue): " + priorityQueue.Dequeue());
-                priorityQueue.Display();
+                Console.WriteLine("--- ЗАВДАННЯ 2: Клас «Магазин» та виклик Dispose() ---");
+                Shop groceryShop = new Shop("Сільпо", "м. Київ, вул. Хрещатик, 44", ShopType.Grocery);
+                groceryShop.DisplayInfo();
+                groceryShop.Dispose();
                 Console.WriteLine();
 
-                Console.WriteLine("--- ЗАВДАННЯ 3: Generic-клас «Кільцева Черга» ---");
-
-                CircularQueue<int> circularQueue = new CircularQueue<int>(4);
-                circularQueue.Enqueue(10);
-                circularQueue.Enqueue(20);
-                circularQueue.Enqueue(30);
-                circularQueue.Enqueue(40);
-
-                circularQueue.Display();
-                Console.WriteLine("Черга повна (IsFull): " + circularQueue.IsFull);
-                Console.WriteLine("Вилучено (Dequeue): " + circularQueue.Dequeue());
-                Console.WriteLine("Вилучено (Dequeue): " + circularQueue.Dequeue());
-
-                circularQueue.Enqueue(50);
-                circularQueue.Enqueue(60);
-                circularQueue.Display();
-                Console.WriteLine("Перший у черзі (Peek): " + circularQueue.Peek());
+                using (Shop footwearShop = new Shop("Intertop", "м. Львів, пл. Міцкевича, 8", ShopType.Footwear))
+                {
+                    footwearShop.DisplayInfo();
+                }
                 Console.WriteLine();
 
-                Console.WriteLine("--- ЗАВДАННЯ 4: Generic-клас «Однозв'язний список» ---");
+                Console.WriteLine("--- ЗАВДАННЯ 3: IDisposable для «П'єси» та деструктор для «Магазину» ---");
 
-                SinglyLinkedList<int> singlyList = new SinglyLinkedList<int>();
-                singlyList.AddLast(10);
-                singlyList.AddLast(20);
-                singlyList.AddLast(30);
-                singlyList.AddFirst(5);
-
-                singlyList.Display();
-                Console.WriteLine("Чи містить 20: " + singlyList.Contains(20));
-                Console.WriteLine("Видалено перший елемент: " + singlyList.RemoveFirst());
-                Console.WriteLine("Видалено останній елемент: " + singlyList.RemoveLast());
-                singlyList.Remove(20);
-                singlyList.Display();
+                using (Play playWithDispose = new Play("Наталка Полтавка", "Котляревський Іван Петрович", "Соціально-побутова драма", 1819))
+                {
+                    playWithDispose.DisplayInfo();
+                }
                 Console.WriteLine();
 
-                Console.WriteLine("--- ЗАВДАННЯ 5: Generic-клас «Двозв'язний список» ---");
-
-                DoublyLinkedList<string> doublyList = new DoublyLinkedList<string>();
-                doublyList.AddLast("Київ");
-                doublyList.AddLast("Львів");
-                doublyList.AddLast("Одеса");
-                doublyList.AddFirst("Харків");
-
-                doublyList.DisplayForward();
-                doublyList.DisplayBackward();
-
-                Console.WriteLine("Видалено елемент 'Львів': " + doublyList.Remove("Львів"));
-                Console.WriteLine("Видалено перший елемент: " + doublyList.RemoveFirst());
-                doublyList.DisplayForward();
-                doublyList.DisplayBackward();
+                CreateShopWithoutDispose();
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
             }
             catch (Exception ex)
             {

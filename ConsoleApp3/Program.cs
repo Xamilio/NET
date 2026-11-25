@@ -1,469 +1,304 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Linq;
 using System.Text;
-using System.Text.Encodings.Web;
-using System.Text.Json;
-using System.Text.Unicode;
 
-namespace PoemsCollectionApp
+namespace LinqFirmsTasks
 {
-    public class Poem
+    public class Employee
     {
-        private string title;
-        private string authorFullName;
-        private int year;
-        private string text;
-        private string theme;
+        public string FullName { get; set; }
+        public string Position { get; set; }
+        public string Phone { get; set; }
+        public string Email { get; set; }
+        public decimal Salary { get; set; }
 
-        public string Title
+        public Employee(string fullName, string position, string phone, string email, decimal salary)
         {
-            get { return title; }
-            set
-            {
-                if (string.IsNullOrWhiteSpace(value))
-                {
-                    throw new ArgumentException("Назва вірша не може бути порожньою.");
-                }
-                title = value;
-            }
+            FullName = fullName;
+            Position = position;
+            Phone = phone;
+            Email = email;
+            Salary = salary;
         }
 
-        public string AuthorFullName
+        public string GetFirstName()
         {
-            get { return authorFullName; }
-            set
-            {
-                if (string.IsNullOrWhiteSpace(value))
-                {
-                    throw new ArgumentException("П.І.Б. автора не може бути порожнім.");
-                }
-                authorFullName = value;
-            }
-        }
-
-        public int Year
-        {
-            get { return year; }
-            set
-            {
-                if (value <= 0 || value > DateTime.Now.Year)
-                {
-                    throw new ArgumentException("Некоректний рік написання вірша.");
-                }
-                year = value;
-            }
-        }
-
-        public string Text
-        {
-            get { return text; }
-            set
-            {
-                if (string.IsNullOrWhiteSpace(value))
-                {
-                    throw new ArgumentException("Текст вірша не може бути порожнім.");
-                }
-                text = value;
-            }
-        }
-
-        public string Theme
-        {
-            get { return theme; }
-            set
-            {
-                if (string.IsNullOrWhiteSpace(value))
-                {
-                    throw new ArgumentException("Тема вірша не може бути порожньою.");
-                }
-                theme = value;
-            }
-        }
-
-        public int Length
-        {
-            get { return text.Length; }
-        }
-
-        public Poem()
-        {
-            title = "Без назви";
-            authorFullName = "Невідомий автор";
-            year = 2000;
-            text = "-";
-            theme = "Загальна";
-        }
-
-        public Poem(string title, string authorFullName, int year, string text, string theme)
-        {
-            this.title = string.Empty;
-            this.authorFullName = string.Empty;
-            this.text = string.Empty;
-            this.theme = string.Empty;
-
-            Title = title;
-            AuthorFullName = authorFullName;
-            Year = year;
-            Text = text;
-            Theme = theme;
-        }
-
-        public bool ContainsWord(string word)
-        {
-            if (string.IsNullOrWhiteSpace(word))
-            {
-                return false;
-            }
-
-            char[] separators = new char[] { ' ', ',', '.', '!', '?', ';', ':', '-', '—', '\n', '\r', '\t', '"', '«', '»' };
-            string[] words = Text.Split(separators, StringSplitOptions.RemoveEmptyEntries);
-
-            for (int i = 0; i < words.Length; i++)
-            {
-                if (string.Equals(words[i], word, StringComparison.OrdinalIgnoreCase))
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            string[] parts = FullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            return parts.Length > 0 ? parts[0] : FullName;
         }
 
         public string GetInfo()
         {
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine("Назва: «" + Title + "»");
-            sb.AppendLine("Автор: " + AuthorFullName);
-            sb.AppendLine("Рік написання: " + Year);
-            sb.AppendLine("Тема: " + Theme);
-            sb.AppendLine("Довжина тексту: " + Length + " символів");
-            sb.AppendLine("Текст:\n" + Text);
-            return sb.ToString();
+            return FullName + " | Посада: " + Position + " | Тел.: " + Phone + " | Email: " + Email + " | Зарплата: " + Salary + " $";
         }
     }
 
-    public class PoemCollection
+    public class Firm
     {
-        private List<Poem> poems;
+        public string Name { get; set; }
+        public DateTime FoundationDate { get; set; }
+        public string BusinessProfile { get; set; }
+        public string DirectorFullName { get; set; }
+        public int EmployeesCount { get; set; }
+        public string Address { get; set; }
+        public Employee[] Employees { get; set; }
 
-        public int Count
+        public Firm(
+            string name,
+            DateTime foundationDate,
+            string businessProfile,
+            string directorFullName,
+            int employeesCount,
+            string address,
+            Employee[] employees)
         {
-            get { return poems.Count; }
+            Name = name;
+            FoundationDate = foundationDate;
+            BusinessProfile = businessProfile;
+            DirectorFullName = directorFullName;
+            EmployeesCount = employeesCount;
+            Address = address;
+            Employees = employees;
         }
 
-        public PoemCollection()
+        public string GetDirectorLastName()
         {
-            poems = new List<Poem>();
+            string[] parts = DirectorFullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            return parts.Length > 0 ? parts[parts.Length - 1] : DirectorFullName;
         }
 
-        public void AddPoem(Poem poem)
+        public string GetInfo()
         {
-            if (poem == null)
-            {
-                throw new ArgumentNullException(nameof(poem), "Вірш не може бути null.");
-            }
-
-            poems.Add(poem);
-        }
-
-        public bool RemovePoemByTitle(string title)
-        {
-            for (int i = 0; i < poems.Count; i++)
-            {
-                if (string.Equals(poems[i].Title, title, StringComparison.OrdinalIgnoreCase))
-                {
-                    poems.RemoveAt(i);
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        public bool UpdatePoem(string currentTitle, string newTitle, string newAuthor, int newYear, string newText, string newTheme)
-        {
-            for (int i = 0; i < poems.Count; i++)
-            {
-                if (string.Equals(poems[i].Title, currentTitle, StringComparison.OrdinalIgnoreCase))
-                {
-                    poems[i].Title = newTitle;
-                    poems[i].AuthorFullName = newAuthor;
-                    poems[i].Year = newYear;
-                    poems[i].Text = newText;
-                    poems[i].Theme = newTheme;
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        public List<Poem> SearchByTitle(string titlePart)
-        {
-            List<Poem> result = new List<Poem>();
-            for (int i = 0; i < poems.Count; i++)
-            {
-                if (poems[i].Title.IndexOf(titlePart, StringComparison.OrdinalIgnoreCase) >= 0)
-                {
-                    result.Add(poems[i]);
-                }
-            }
-            return result;
-        }
-
-        public List<Poem> SearchByAuthor(string authorPart)
-        {
-            List<Poem> result = new List<Poem>();
-            for (int i = 0; i < poems.Count; i++)
-            {
-                if (poems[i].AuthorFullName.IndexOf(authorPart, StringComparison.OrdinalIgnoreCase) >= 0)
-                {
-                    result.Add(poems[i]);
-                }
-            }
-            return result;
-        }
-
-        public List<Poem> SearchByTheme(string theme)
-        {
-            List<Poem> result = new List<Poem>();
-            for (int i = 0; i < poems.Count; i++)
-            {
-                if (string.Equals(poems[i].Theme, theme, StringComparison.OrdinalIgnoreCase))
-                {
-                    result.Add(poems[i]);
-                }
-            }
-            return result;
-        }
-
-        public List<Poem> SearchByWord(string word)
-        {
-            List<Poem> result = new List<Poem>();
-            for (int i = 0; i < poems.Count; i++)
-            {
-                if (poems[i].ContainsWord(word))
-                {
-                    result.Add(poems[i]);
-                }
-            }
-            return result;
-        }
-
-        public List<Poem> SearchByYear(int year)
-        {
-            List<Poem> result = new List<Poem>();
-            for (int i = 0; i < poems.Count; i++)
-            {
-                if (poems[i].Year == year)
-                {
-                    result.Add(poems[i]);
-                }
-            }
-            return result;
-        }
-
-        public List<Poem> SearchByLengthRange(int minLength, int maxLength)
-        {
-            List<Poem> result = new List<Poem>();
-            for (int i = 0; i < poems.Count; i++)
-            {
-                if (poems[i].Length >= minLength && poems[i].Length <= maxLength)
-                {
-                    result.Add(poems[i]);
-                }
-            }
-            return result;
-        }
-
-        public void SaveToFile(string filePath)
-        {
-            JsonSerializerOptions options = new JsonSerializerOptions
-            {
-                WriteIndented = true,
-                Encoder = JavaScriptEncoder.Create(UnicodeRanges.BasicLatin, UnicodeRanges.Cyrillic)
-            };
-
-            string json = JsonSerializer.Serialize(poems, options);
-            File.WriteAllText(filePath, json, Encoding.UTF8);
-        }
-
-        public void LoadFromFile(string filePath)
-        {
-            if (!File.Exists(filePath))
-            {
-                throw new FileNotFoundException("Файл колекції віршів не знайдено.", filePath);
-            }
-
-            string json = File.ReadAllText(filePath, Encoding.UTF8);
-            List<Poem>? loadedPoems = JsonSerializer.Deserialize<List<Poem>>(json);
-
-            if (loadedPoems != null)
-            {
-                poems = loadedPoems;
-            }
-        }
-
-        private string FormatReport(string reportTitle, List<Poem> items)
-        {
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine("=== " + reportTitle + " ===");
-            sb.AppendLine("Знайдено віршів: " + items.Count);
-            sb.AppendLine(new string('-', 45));
-
-            if (items.Count == 0)
-            {
-                sb.AppendLine("Віршів за заданим критерієм не знайдено.");
-            }
-            else
-            {
-                for (int i = 0; i < items.Count; i++)
-                {
-                    sb.AppendLine((i + 1) + ". " + items[i].GetInfo());
-                }
-            }
-
-            return sb.ToString();
-        }
-
-        public string GenerateReportByTitle(string titleQuery)
-        {
-            return FormatReport("Звіт за назвою вірша («" + titleQuery + "»)", SearchByTitle(titleQuery));
-        }
-
-        public string GenerateReportByAuthor(string authorQuery)
-        {
-            return FormatReport("Звіт за П.І.Б. автора («" + authorQuery + "»)", SearchByAuthor(authorQuery));
-        }
-
-        public string GenerateReportByTheme(string themeQuery)
-        {
-            return FormatReport("Звіт за темою вірша («" + themeQuery + "»)", SearchByTheme(themeQuery));
-        }
-
-        public string GenerateReportByWord(string wordQuery)
-        {
-            return FormatReport("Звіт за словом у тексті («" + wordQuery + "»)", SearchByWord(wordQuery));
-        }
-
-        public string GenerateReportByYear(int yearQuery)
-        {
-            return FormatReport("Звіт за роком написання (" + yearQuery + ")", SearchByYear(yearQuery));
-        }
-
-        public string GenerateReportByLength(int minLength, int maxLength)
-        {
-            return FormatReport("Звіт за довжиною вірша (" + minLength + " - " + maxLength + " символів)", SearchByLengthRange(minLength, maxLength));
-        }
-
-        public void OutputReport(string reportContent, bool saveToFile, string? reportFilePath = null)
-        {
-            Console.WriteLine(reportContent);
-
-            if (saveToFile && !string.IsNullOrWhiteSpace(reportFilePath))
-            {
-                File.WriteAllText(reportFilePath, reportContent, Encoding.UTF8);
-                Console.WriteLine("Звіт збережено у файл: " + reportFilePath);
-                Console.WriteLine();
-            }
+            return "«" + Name + "» | Профіль: " + BusinessProfile +
+                   " | Заснована: " + FoundationDate.ToString("dd.MM.yyyy") +
+                   " | Директор: " + DirectorFullName +
+                   " | Працівників: " + EmployeesCount +
+                   " | Адреса: " + Address;
         }
     }
 
     class Program
     {
+        public static void PrintFirms(string title, IEnumerable<Firm> firms)
+        {
+            Console.WriteLine("► " + title + ":");
+            List<Firm> list = firms.ToList();
+
+            if (list.Count == 0)
+            {
+                Console.WriteLine("  (не знайдено)");
+            }
+            else
+            {
+                for (int i = 0; i < list.Count; i++)
+                {
+                    Console.WriteLine("  " + (i + 1) + ". " + list[i].GetInfo());
+                }
+            }
+            Console.WriteLine();
+        }
+
+        public static void PrintEmployees(string title, IEnumerable<Employee> employees)
+        {
+            Console.WriteLine("► " + title + ":");
+            List<Employee> list = employees.ToList();
+
+            if (list.Count == 0)
+            {
+                Console.WriteLine("  (не знайдено)");
+            }
+            else
+            {
+                for (int i = 0; i < list.Count; i++)
+                {
+                    Console.WriteLine("  " + (i + 1) + ". " + list[i].GetInfo());
+                }
+            }
+            Console.WriteLine();
+        }
+
         static void Main(string[] args)
         {
             Console.OutputEncoding = Encoding.UTF8;
 
-            try
+            DateTime today = DateTime.Now.Date;
+
+            Firm[] firms = new Firm[]
             {
-                Console.WriteLine("--- ЗАВДАННЯ 1: Робота з колекцією віршів ---");
+                new Firm(
+                    "White Food Market",
+                    today.AddYears(-5),
+                    "Харчова промисловість",
+                    "John White",
+                    150,
+                    "Лондон, Baker Street 221B",
+                    new Employee[]
+                    {
+                        new Employee("Lionel Carter", "Менеджер", "234-55-11", "diana.carter@whitefood.com", 3200m),
+                        new Employee("Sarah Connor", "Технолог", "441-10-22", "sarah@whitefood.com", 2400m),
+                        new Employee("David Brown", "Менеджер", "239-88-99", "david@whitefood.com", 2900m)
+                    }
+                ),
+                new Firm(
+                    "Bright Marketing Agency",
+                    today.AddDays(-123),
+                    "Маркетинг",
+                    "Emily Stone",
+                    85,
+                    "Київ, вул. Хрещатик 22",
+                    new Employee[]
+                    {
+                        new Employee("Олена Коваль", "Маркетолог", "050-123-45-67", "olena@bright.ua", 1900m),
+                        new Employee("Lionel Kovalenko", "Менеджер", "231-00-44", "dimon@bright.ua", 2700m)
+                    }
+                ),
+                new Firm(
+                    "White Star Solutions",
+                    today.AddYears(-3),
+                    "IT",
+                    "Robert Black",
+                    240,
+                    "Лондон, Oxford Street 15",
+                    new Employee[]
+                    {
+                        new Employee("James Wilson", "Senior Developer", "237-77-01", "dirk.wilson@whitestar.uk", 5200m),
+                        new Employee("Lionel Andres", "Team Lead", "555-12-34", "lionel@whitestar.uk", 5800m),
+                        new Employee("Anna Taylor", "Менеджер", "449-01-02", "anna@whitestar.uk", 3500m)
+                    }
+                ),
+                new Firm(
+                    "Healthy Food Express",
+                    today.AddYears(-1),
+                    "Маркетинг",
+                    "Michael White",
+                    420,
+                    "Львів, пл. Ринок 10",
+                    new Employee[]
+                    {
+                        new Employee("Ігор Мельник", "Аналітик", "230-99-88", "igor@healthyfood.ua", 2100m),
+                        new Employee("Марія Бойко", "Дизайнер", "067-999-11-22", "diana.boyko@healthyfood.ua", 2300m)
+                    }
+                )
+            };
 
-                PoemCollection collection = new PoemCollection();
+            Console.WriteLine("=====================================================================");
+            Console.WriteLine("ЗАВДАННЯ 1: Запити LINQ (синтаксис запитів)");
+            Console.WriteLine("=====================================================================\n");
 
-                collection.AddPoem(new Poem(
-                    "Заповіт",
-                    "Шевченко Тарас Григорович",
-                    1845,
-                    "Як умру, то поховайте\nМене на могилі\nСеред степу широкого\nНа Вкраїні милій...",
-                    "Патріотична лірика"
-                ));
+            var q1All = from f in firms
+                        select f;
+            PrintFirms("1. Усі фірми", q1All);
 
-                collection.AddPoem(new Poem(
-                    "Садок вишневий коло хати",
-                    "Шевченко Тарас Григорович",
-                    1847,
-                    "Садок вишневий коло хати,\nХрущі над вишнями гудуть,\nПлугатарі з плугами йдуть...",
-                    "Пейзажна лірика"
-                ));
+            var q1Food = from f in firms
+                         where f.Name.Contains("Food")
+                         select f;
+            PrintFirms("2. Фірми зі словом «Food» у назві", q1Food);
 
-                collection.AddPoem(new Poem(
-                    "Contra spem spero!",
-                    "Косач Лариса Петрівна (Леся Українка)",
-                    1890,
-                    "Гетьте, думи, ви хмари осінні!\nТо ж тепера весна золота!",
-                    "Філософська лірика"
-                ));
+            var q1Marketing = from f in firms
+                              where f.BusinessProfile == "Маркетинг"
+                              select f;
+            PrintFirms("3. Фірми у галузі маркетингу", q1Marketing);
 
-                collection.AddPoem(new Poem(
-                    "Чого являєшся мені у сні?",
-                    "Франко Іван Якович",
-                    1896,
-                    "Чого являєшся мені у сні?\nЧого звертаєш ти до мене чудові очі ті ясні...",
-                    "Інтимна лірика"
-                ));
+            var q1MarketingOrIt = from f in firms
+                                  where f.BusinessProfile == "Маркетинг" || f.BusinessProfile == "IT"
+                                  select f;
+            PrintFirms("4. Фірми у галузі маркетингу або IT", q1MarketingOrIt);
 
-                Console.WriteLine("Додано віршів у колекцію: " + collection.Count);
+            var q1MoreThan100 = from f in firms
+                                where f.EmployeesCount > 100
+                                select f;
+            PrintFirms("5. Фірми з кількістю працівників більше 100", q1MoreThan100);
 
-                collection.UpdatePoem(
-                    "Contra spem spero!",
-                    "Contra spem spero!",
-                    "Косач Лариса Петрівна (Леся Українка)",
-                    1890,
-                    "Гетьте, думи, ви хмари осінні!\nТо ж тепера весна золота!\nЧи то так у жалю, в голосінні\nПроминуть молодії літа?",
-                    "Філософська лірика"
-                );
-                Console.WriteLine("Оновлено інформацію про вірш «Contra spem spero!»");
+            var q1Range100To300 = from f in firms
+                                  where f.EmployeesCount >= 100 && f.EmployeesCount <= 300
+                                  select f;
+            PrintFirms("6. Фірми з кількістю працівників від 100 до 300", q1Range100To300);
 
-                collection.RemovePoemByTitle("Чого являєшся мені у сні?");
-                Console.WriteLine("Після видалення вірша залишилось у колекції: " + collection.Count);
+            var q1London = from f in firms
+                           where f.Address.Contains("Лондон")
+                           select f;
+            PrintFirms("7. Фірми, які знаходяться в Лондоні", q1London);
 
-                string storageFile = "poems_collection.json";
-                collection.SaveToFile(storageFile);
-                Console.WriteLine("Колекцію збережено у файл: " + storageFile);
+            var q1DirectorWhite = from f in firms
+                                  where f.GetDirectorLastName() == "White"
+                                  select f;
+            PrintFirms("8. Фірми, в яких прізвище директора White", q1DirectorWhite);
 
-                PoemCollection loadedCollection = new PoemCollection();
-                loadedCollection.LoadFromFile(storageFile);
-                Console.WriteLine("Колекцію завантажено з файлу (віршів: " + loadedCollection.Count + ").");
-                Console.WriteLine();
+            var q1OlderThan2Years = from f in firms
+                                    where f.FoundationDate < today.AddYears(-2)
+                                    select f;
+            PrintFirms("9. Фірми, засновані більше двох років тому", q1OlderThan2Years);
 
-                Console.WriteLine("--- ЗАВДАННЯ 2: Звіти (за назвою, автором, темою) ---");
+            var q1Exactly123Days = from f in firms
+                                   where (today - f.FoundationDate.Date).Days == 123
+                                   select f;
+            PrintFirms("10. Фірми, з дня заснування яких минуло 123 дні", q1Exactly123Days);
 
-                string reportByTitle = loadedCollection.GenerateReportByTitle("Заповіт");
-                loadedCollection.OutputReport(reportByTitle, true, "report_by_title.txt");
+            var q1BlackAndWhite = from f in firms
+                                  where f.GetDirectorLastName() == "Black" && f.Name.Contains("White")
+                                  select f;
+            PrintFirms("11. Фірми: прізвище директора Black і назва містить «White»", q1BlackAndWhite);
 
-                string reportByAuthor = loadedCollection.GenerateReportByAuthor("Шевченко");
-                loadedCollection.OutputReport(reportByAuthor, true, "report_by_author.txt");
+            Console.WriteLine("=====================================================================");
+            Console.WriteLine("ЗАВДАННЯ 2: Ті самі запити через методи розширень LINQ");
+            Console.WriteLine("=====================================================================\n");
 
-                string reportByTheme = loadedCollection.GenerateReportByTheme("Філософська лірика");
-                loadedCollection.OutputReport(reportByTheme, true, "report_by_theme.txt");
+            PrintFirms("1. Усі фірми (Select)", firms.Select(f => f));
+            PrintFirms("2. Назва містить «Food» (Where)", firms.Where(f => f.Name.Contains("Food")));
+            PrintFirms("3. Галузь маркетингу (Where)", firms.Where(f => f.BusinessProfile == "Маркетинг"));
+            PrintFirms("4. Галузь маркетингу або IT (Where)", firms.Where(f => f.BusinessProfile == "Маркетинг" || f.BusinessProfile == "IT"));
+            PrintFirms("5. Кількість працівників > 100 (Where)", firms.Where(f => f.EmployeesCount > 100));
+            PrintFirms("6. Кількість працівників 100..300 (Where)", firms.Where(f => f.EmployeesCount >= 100 && f.EmployeesCount <= 300));
+            PrintFirms("7. Знаходяться в Лондоні (Where)", firms.Where(f => f.Address.Contains("Лондон")));
+            PrintFirms("8. Прізвище директора White (Where)", firms.Where(f => f.GetDirectorLastName() == "White"));
+            PrintFirms("9. Засновані більше 2 років тому (Where)", firms.Where(f => f.FoundationDate < today.AddYears(-2)));
+            PrintFirms("10. З дня заснування минуло 123 дні (Where)", firms.Where(f => (today - f.FoundationDate.Date).Days == 123));
+            PrintFirms("11. Директор Black і назва містить «White» (Where)", firms.Where(f => f.GetDirectorLastName() == "Black" && f.Name.Contains("White")));
 
-                Console.WriteLine("--- ЗАВДАННЯ 3: Додаткові звіти (за словом, роком, довжиною) ---");
+            Console.WriteLine("=====================================================================");
+            Console.WriteLine("ЗАВДАННЯ 3: Запити по працівниках фірм");
+            Console.WriteLine("=====================================================================\n");
 
-                string reportByWord = loadedCollection.GenerateReportByWord("весна");
-                loadedCollection.OutputReport(reportByWord, true, "report_by_word.txt");
+            string targetFirmName = "White Star Solutions";
+            decimal minSalary = 3000m;
 
-                string reportByYear = loadedCollection.GenerateReportByYear(1847);
-                loadedCollection.OutputReport(reportByYear, true, "report_by_year.txt");
+            var empOfFirm = from f in firms
+                            where f.Name == targetFirmName
+                            from e in f.Employees
+                            select e;
+            PrintEmployees("1. Усі працівники фірми «" + targetFirmName + "»", empOfFirm);
 
-                string reportByLength = loadedCollection.GenerateReportByLength(70, 120);
-                loadedCollection.OutputReport(reportByLength, true, "report_by_length.txt");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Помилка: " + ex.Message);
-            }
+            var empSalaryGreater = from f in firms
+                                   where f.Name == targetFirmName
+                                   from e in f.Employees
+                                   where e.Salary > minSalary
+                                   select e;
+            PrintEmployees("2. Працівники фірми «" + targetFirmName + "» із зарплатою > " + minSalary + " $", empSalaryGreater);
+
+            var empManagers = from f in firms
+                              from e in f.Employees
+                              where e.Position == "Менеджер"
+                              select e;
+            PrintEmployees("3. Працівники усіх фірм на посаді «Менеджер»", empManagers);
+
+            var empPhone23 = from f in firms
+                             from e in f.Employees
+                             where e.Phone.StartsWith("23")
+                             select e;
+            PrintEmployees("4. Працівники, у яких телефон починається з «23»", empPhone23);
+
+            var empEmailDi = from f in firms
+                             from e in f.Employees
+                             where e.Email.StartsWith("di", StringComparison.OrdinalIgnoreCase)
+                             select e;
+            PrintEmployees("5. Працівники, у яких Email починається з «di»", empEmailDi);
+
+            var empLionel = from f in firms
+                            from e in f.Employees
+                            where e.GetFirstName() == "Lionel"
+                            select e;
+            PrintEmployees("6. Працівники з ім'ям Lionel", empLionel);
         }
     }
 }
